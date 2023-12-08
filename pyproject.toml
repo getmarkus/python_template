@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "python-template"
+version = "0.1.0"
+description = ""
+authors = ["Chris Markus <chris@christophermarkus.com>"]
+readme = "README.md"
+packages = [{include = "python_template", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pytest = "^7.4.3"
+datamodel-code-generator = "^0.22.1"
+pydantic = "^2.4.2"
+devtools = "^0.12.2"
+fastapi = "^0.104.1"
+dataclasses-json = "^0.6.1"
+uvicorn = {extras = ["standard"], version = "^0.24.0"}
+fastapi-health = "^0.4.0"
+httpx = "^0.25.1"
+loguru = "^0.7.2"
+pydantic-settings = "^2.0.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
