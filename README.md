@@ -2,4 +2,4 @@ Simple python template I am experimenting with around a set of overlapping conce
 * DDD
 * Clean architecture
 * Ports/Adapters
-* Verticle slice
+* Vertical slice
