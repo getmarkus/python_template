@@ -15,7 +15,6 @@ class IssueState(Enum):
     def is_open(self):
         return self == IssueState.OPEN
 
-
 class IssueEventType(Enum):
     OPENED = "OPENED"
     CLOSED = "CLOSED"
@@ -27,7 +26,7 @@ class IssueEventType(Enum):
     def is_open(self):
         return self == IssueEventType.OPENED
 
-
+### Events ###
 class IssueEvent(BaseEvent):
     event_id: str
     timestamp: datetime
@@ -35,7 +34,7 @@ class IssueEvent(BaseEvent):
     issue_state: IssueState
     issue_event_type: IssueEventType
 
-
+### Commands ###
 class IssueCommand(BaseCommand):
     command_id: str
     timestamp: datetime
@@ -46,7 +45,7 @@ class IssueCommand(BaseCommand):
     def validate(self) -> bool:
         return True
 
-
+### Entitites ###
 class Issue(AggregateRoot[BaseCommand, BaseEvent]):
     issue_number: int
 
@@ -60,3 +59,7 @@ class Issue(AggregateRoot[BaseCommand, BaseEvent]):
         pass
 
     # likely need a handler method here for 'domain' events and not aggregate events
+
+### Exceptions ###
+
+### Value Objects ###
