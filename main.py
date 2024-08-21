@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi_health import health
+from fastapi_health import health  # type: ignore
 from loguru import logger
 
 from src.app_core.config import settings
@@ -34,6 +34,7 @@ async def lifespan(app: FastAPI):
 def isConfigured():
     logger.info(f"configured: {settings.env_smoke_test == "configured"}")
     return settings.env_smoke_test == "configured"
+
 
 app = FastAPI(
     lifespan=lifespan, title=settings.project_name, openapi_url=f"/v1/openapi.json"

@@ -1,15 +1,23 @@
-Simple python template I am experimenting with around a set of overlapping concepts with a Fastapi implementation:
-* DDD
-* Clean architecture
-* Ports/Adapters
-* Vertical slice
-
 ```mermaid
 graph TD;
     analyze_endpoint["/issues/{issue_number}/analyze (POST)"] -->|Depends| configure_repository
     analyze_endpoint -->|Depends| configure_unit_of_work
     configure_repository -->|Returns| repo["RepositoryProtocol[Issue]"]
-    configure_unit_of_work -->|Returns| uow["UnitOfWork[UnitOfWorkProtocol[ConnectionProtocol]]"]
+    configure_unit_of_work -->|Returns| uow["UnitOfWorkProtocol[ConnectionProtocol]"]
+    analyze_endpoint --> ApplicationFacade_analyze_issue["ApplicationFacade.analyze_issue()"]
+    ApplicationFacade_analyze_issue --> AnalyzeIssue_constructor["AnalyzeIssue.__init__()"]
+    AnalyzeIssue_constructor --> AnalyzeIssue_analyze["AnalyzeIssue.analyze()"]
+    AnalyzeIssue_analyze --> repo_get_by_id["repo.get_by_id()"]
+    repo_get_by_id -->|Issue found| AnalyzeIssue_analyze
+    repo_get_by_id -->|Issue not found| repo_add["repo.add()"]
+    repo_add --> AnalyzeIssue_analyze
+```
+```mermaid
+graph TD;
+    analyze_endpoint["/issues/{issue_number}/analyze (POST)"] -->|Depends| configure_repository["configure_repository()"]
+    analyze_endpoint -->|Depends| configure_unit_of_work["configure_unit_of_work()"]
+    configure_repository -->|Returns| repo["RepositoryProtocol[Issue]"]
+    configure_unit_of_work -->|Returns| uow["UnitOfWorkProtocol[ConnectionProtocol]"]
     analyze_endpoint --> ApplicationFacade_analyze_issue["ApplicationFacade.analyze_issue()"]
     ApplicationFacade_analyze_issue --> AnalyzeIssue_constructor["AnalyzeIssue.__init__()"]
     AnalyzeIssue_constructor --> AnalyzeIssue_analyze["AnalyzeIssue.analyze()"]
