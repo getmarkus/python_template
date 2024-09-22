@@ -1,6 +1,6 @@
 import abc
 from datetime import datetime
-from typing import Generic, Protocol, TypeVar
+from typing import Protocol
 
 from pydantic import BaseModel
 
@@ -18,19 +18,14 @@ class BaseEvent(Protocol):
     event_id: str
     timestamp: datetime
 
-
-TCommand = TypeVar("TCommand", bound=BaseCommand)
-TEvent = TypeVar("TEvent", bound=BaseEvent)
-
-
-class AggregateRoot(BaseModel, Generic[TCommand, TEvent], abc.ABC):
+class AggregateRoot(BaseModel, abc.ABC):
     version: int = 0
 
     # or handle()
     @abc.abstractmethod
-    def process(self, command: TCommand) -> list[TEvent]:
+    def process(self, command: BaseCommand) -> list[BaseEvent]:
         pass
 
     @abc.abstractmethod
-    def apply(self, event: TEvent) -> None:
+    def apply(self, event: BaseEvent) -> None:
         pass

@@ -46,7 +46,7 @@ class IssueCommand(BaseCommand):
         return True
 
 ### Entitites ###
-class Issue(AggregateRoot[BaseCommand, BaseEvent]):
+class Issue(AggregateRoot):
     issue_number: int
 
     def process(self, command: BaseCommand) -> list[BaseEvent]:

@@ -38,6 +38,7 @@ def isConfigured():
     return Settings.get_settings().env_smoke_test == "configured"
 
 
+
 app = FastAPI(
     lifespan=lifespan, title=Settings.get_settings().project_name, openapi_url="/v1/openapi.json"
 )
