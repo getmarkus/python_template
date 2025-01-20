@@ -5,8 +5,8 @@ Simple python template I am experimenting with around a set of overlapping conce
 * Vertical slice
 
 ``` bash
-dotenv run -- poetry run uvicorn main:app --reload
-dotenv run -- poetry run pytest
+dotenv run fastapi dev main.py
+dotenv run pytest
 ```
 
 ``` mermaid
