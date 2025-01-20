@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     def setFromTOML(self):
         with open(self.pyproject_file, "rb") as f:
             _META = tomllib.load(f)
-        self.project_name = _META["tool"]["poetry"]["name"]
+        self.project_name = _META["project"]["name"]
 
     @classmethod
     @lru_cache
