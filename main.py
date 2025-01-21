@@ -10,6 +10,8 @@ from loguru import logger
 
 from config import Settings
 from src.interface_adapters import api_router
+from src.interface_adapters.exceptions import AppException
+from src.interface_adapters.middleware.error_handler import app_exception_handler
 
 # https://brandur.org/logfmt
 # https://github.com/Delgan/loguru
@@ -43,6 +45,9 @@ app = FastAPI(
     title=Settings.get_settings().project_name,
     openapi_url="/v1/openapi.json",
 )
+
+# Register global exception handler
+app.add_exception_handler(AppException, app_exception_handler)
 
 app.add_middleware(
     CORSMiddleware,
