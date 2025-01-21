@@ -3,27 +3,26 @@ from src.domain.issue import Issue
 
 class IssueRepository(Protocol):
     # or get
-    def get_by_id(self, id: int) -> Issue:
+    async def get_by_id(self, id: int) -> Issue:
         ...
 
     # or get_all
-    def list(self) -> Iterable[Issue]:
+    async def list(self) -> Iterable[Issue]:
         # return []
         ...
 
-    def list_with_predicate(self, predicate: Callable[[Issue], bool]) -> Iterable[Issue]:
+    async def list_with_predicate(self, predicate: Callable[[Issue], bool]) -> Iterable[Issue]:
         # for item in self.list():
         #    if predicate(item):
         #        yield item
         # return filter(predicate, self.list())
         ...
 
-    def add(self, entity: Issue) -> None:
+    async def add(self, entity: Issue) -> None:
         ...
 
-    def delete(self, entity: Issue) -> None:
+    async def update(self, entity: Issue) -> None:
         ...
 
-    # or update
-    def edit(self, entity: Issue) -> None:
+    async def remove(self, entity: Issue) -> None:
         ...

@@ -443,6 +443,9 @@ requires-dist = [
     { name = "pytest", specifier = ">=8.3.4" },
 ]
 
+[package.metadata.requires-dev]
+dev = []
+
 [[package]]
 name = "pyyaml"
 version = "6.0.2"

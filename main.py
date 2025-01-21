@@ -1,13 +1,11 @@
+from contextlib import asynccontextmanager
 import datetime
 import os
-from contextlib import asynccontextmanager
-
-# from functools import lru_cache
-from typing import Annotated, Dict, Any
+from typing import Annotated, Any, Dict
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi_health import health  # type: ignore
+from fastapi_health import health
 from loguru import logger
 
 from config import Settings
@@ -20,9 +18,11 @@ from src.interface_adapters import api_router
 env = os.getenv("PYTHON_TEMPLATE_ENV", ".env")
 running = False
 
-def isRunning() -> bool:
+
+async def isRunning() -> bool:
     logger.info(f"running: {running}")
     return running
+
 
 # https://fastapi.tiangolo.com/advanced/events/
 @asynccontextmanager
@@ -33,14 +33,15 @@ async def lifespan(app: FastAPI):
     running = False
 
 
-def isConfigured():
+async def isConfigured():
     logger.info(f"configured: {Settings.get_settings().env_smoke_test == "configured"}")
     return Settings.get_settings().env_smoke_test == "configured"
 
 
-
 app = FastAPI(
-    lifespan=lifespan, title=Settings.get_settings().project_name, openapi_url="/v1/openapi.json"
+    lifespan=lifespan,
+    title=Settings.get_settings().project_name,
+    openapi_url="/v1/openapi.json",
 )
 
 app.add_middleware(
@@ -52,16 +53,22 @@ app.add_middleware(
     allow_headers=["X-Forwarded-For", "Authorization", "Content-Type"],
 )
 
+
 @app.get("/")
-async def root(settings: Annotated[Settings, Depends(Settings.get_settings)]) -> Dict[str, Any]:
+async def root(
+    settings: Annotated[Settings, Depends(Settings.get_settings)],
+) -> Dict[str, Any]:
     logger.info(f"running: {running}")
     return {
         "app_name": settings.project_name,
         "system_time": datetime.datetime.now(),
     }
 
+
 @app.get("/info")
-async def info(settings: Annotated[Settings, Depends(Settings.get_settings)]) -> Dict[str, Any]:
+async def info(
+    settings: Annotated[Settings, Depends(Settings.get_settings)],
+) -> Dict[str, Any]:
     logger.info(settings.model_dump())
     return {
         "app_name": settings.project_name,
@@ -70,6 +77,7 @@ async def info(settings: Annotated[Settings, Depends(Settings.get_settings)]) ->
         "env_smoke_test": settings.env_smoke_test,
         "items_per_user": settings.project_name,
     }
+
 
 # https://docs.paperspace.com/gradient/deployments/healthchecks/
 # https://github.com/Kludex/fastapi-health
