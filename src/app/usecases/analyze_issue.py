@@ -12,7 +12,7 @@ from src.domain.issue import Issue
 
 class AnalyzeIssueProtocol(Protocol):
     @abstractmethod
-    def analyze(self) -> Issue:
+    async def analyze(self) -> Issue:
         raise NotImplementedError
 
 
@@ -31,14 +31,7 @@ class AnalyzeIssue(AnalyzeIssueProtocol):
         self.repo = repo
         self.unit_of_work = unit_of_work
 
-    def analyze(self) -> Issue:
-        logger.info(f"use case for analyze_issue: {self.issue_number}")
-        with self.unit_of_work:
-            issue: Issue = self.repo.get_by_id(self.issue_number)
-            if issue.issue_number == 0:
-                logger.info(f"issue not found, creating new issue: {self.issue_number}")
-                issue.issue_number = self.issue_number
-                issue.version = 1
-                self.repo.add(issue)
-        # or could be a DTO as a inner class
+    async def analyze(self) -> Issue:
+        logger.info(f"analyzing issue: {self.issue_number}")
+        issue = await self.repo.get_by_id(self.issue_number)
         return issue

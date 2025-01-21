@@ -14,14 +14,14 @@ router = APIRouter()
 
 
 # https://fastapi.tiangolo.com/tutorial/dependencies/
-def configure_unit_of_work() -> Optional[UnitOfWork]:
+async def configure_unit_of_work() -> Optional[UnitOfWork]:
     if Settings.get_settings().execution_mode == "in-memory":
         return UnitOfWork()
     else:
         return None
 
 
-def configure_repository() -> Optional[InMemoryIssueRepository]:
+async def configure_repository() -> Optional[InMemoryIssueRepository]:
     if Settings.get_settings().execution_mode == "in-memory":
         return InMemoryIssueRepository()
     else:
@@ -29,14 +29,11 @@ def configure_repository() -> Optional[InMemoryIssueRepository]:
 
 
 @router.post("/issues/{issue_number}/analyze", response_model=Issue)
-def analyze_issue(
+async def analyze_issue(
     issue_number: int,
+    unit_of_work: Annotated[UnitOfWork, Depends(configure_unit_of_work)],
     repo: Annotated[InMemoryIssueRepository, Depends(configure_repository)],
-    uow: Annotated[UnitOfWork, Depends(configure_unit_of_work)],
 ) -> Issue:
-    logger.info(f"post for analyze_issue: {issue_number}")
-    issue: Issue = AnalyzeIssue(
-        issue_number=issue_number, repo=repo, unit_of_work=uow
-    ).analyze()
-
-    return issue
+    logger.info(f"analyzing issue: {issue_number}")
+    use_case = AnalyzeIssue(issue_number=issue_number, repo=repo, unit_of_work=unit_of_work)
+    return await use_case.analyze()
