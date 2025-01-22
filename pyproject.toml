@@ -6,7 +6,6 @@ authors = [{ name = "Chris Markus", email = "chris@christophermarkus.com" }]
 requires-python = "~=3.12"
 readme = "README.md"
 dependencies = [
-   "fastapi-health>=0.4.0",
    "fastapi[standard]>=0.115.6",
    "httpx>=0.28.1",
    "loguru>=0.7.3",
