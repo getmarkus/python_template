@@ -1,12 +1,13 @@
 from contextlib import asynccontextmanager
 import datetime
 import os
-from typing import Annotated, Any, Dict
+from typing import Annotated, Any, Dict, Optional
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi_health import health
+from fastapi.responses import JSONResponse
 from loguru import logger
+from pydantic import BaseModel, Field
 
 from config import Settings
 from src.interface_adapters import api_router
@@ -21,7 +22,7 @@ env = os.getenv("PYTHON_TEMPLATE_ENV", ".env")
 running = False
 
 
-async def isRunning() -> bool:
+def isRunning() -> bool:
     logger.info(f"running: {running}")
     return running
 
@@ -31,13 +32,69 @@ async def isRunning() -> bool:
 async def lifespan(app: FastAPI):
     global running
     running = True
+    logger.info("Lifespan started")
     yield
     running = False
+    logger.info("Lifespan stopped")
 
 
-async def isConfigured():
+def is_configured() -> bool:
     logger.info(f"configured: {Settings.get_settings().env_smoke_test == "configured"}")
     return Settings.get_settings().env_smoke_test == "configured"
+
+
+""" {
+  "status": "pass|fail|warn",  // Required
+  "version": "1.0",           // Optional
+  "description": "...",       // Optional
+  "checks": {                 // Optional, for detailed component status
+    "database": {
+      "status": "up",
+      "responseTime": "23ms"
+    },
+    "cache": {
+      "status": "up",
+      "responseTime": "5ms"
+    }
+  }
+} """
+
+
+class HealthCheck(BaseModel):
+    """RFC Health Check response format."""
+
+    status: str = Field(
+        ..., description="Required. Status of the service: pass, fail, or warn"
+    )
+    version: Optional[str] = Field(None, description="Version of the service")
+    description: Optional[str] = Field(
+        None, description="Human-friendly description of the service"
+    )
+    checks: Optional[Dict[str, Dict[str, Any]]] = Field(
+        None, description="Additional checks"
+    )
+
+
+def create_health_response(is_healthy: bool, check_name: str) -> JSONResponse:
+    """Create a standardized health check response."""
+    status = "pass" if is_healthy else "fail"
+    response = HealthCheck(
+        status=status,
+        version=Settings.get_settings().project_name,
+        description=f"Service {status}",
+        checks={
+            check_name: {
+                "status": status,
+                "time": datetime.datetime.now().isoformat(),
+            }
+        },
+    )
+
+    return JSONResponse(
+        status_code=200 if is_healthy else 503,
+        content=response.model_dump(),
+        media_type="application/health+json",
+    )
 
 
 app = FastAPI(
@@ -80,18 +137,44 @@ async def info(
         "system_time": datetime.datetime.now(),
         "execution_mode": settings.execution_mode,
         "env_smoke_test": settings.env_smoke_test,
-        "items_per_user": settings.project_name,
     }
 
 
-# https://docs.paperspace.com/gradient/deployments/healthchecks/
-# https://github.com/Kludex/fastapi-health
-# https://github.com/healthchecks/healthchecks
-app.add_api_route("/health", health([isRunning]))
-app.add_api_route("/startup", health([isRunning]))
-app.add_api_route("/readiness", health([isRunning]))
-app.add_api_route("/liveness", health([isRunning]))
-app.add_api_route("/smoke", health([isConfigured]))
+# Health check endpoints
+# Startup: Signals if the application has completed its initial startup
+# Smoke: Verifies basic configuration and dependencies
+# Readiness: Shows if the application is ready to handle requests
+# Liveness: Indicates if the application is running and alive
+# https://datatracker.ietf.org/doc/html/draft-inadarei-api-health-check
+@app.get("/health", response_class=JSONResponse)
+async def health_check() -> JSONResponse:
+    """Overall service health check."""
+    return create_health_response(isRunning(), "service")
+
+
+@app.get("/liveness", response_class=JSONResponse)
+async def liveness_check() -> JSONResponse:
+    """Service liveness check."""
+    return create_health_response(isRunning(), "liveness")
+
+
+@app.get("/startup", response_class=JSONResponse)
+async def startup_check() -> JSONResponse:
+    """Startup health check."""
+    return create_health_response(isRunning(), "startup")
+
+
+@app.get("/readiness", response_class=JSONResponse)
+async def readiness_check() -> JSONResponse:
+    """Service readiness check."""
+    return create_health_response(isRunning(), "readiness")
+
+
+@app.get("/smoke", response_class=JSONResponse)
+async def smoke_check() -> JSONResponse:
+    """Configuration smoke test."""
+    return create_health_response(is_configured(), "configuration")
+
 
 # add feature routers here
 app.include_router(api_router, prefix="/v1")
@@ -104,6 +187,5 @@ app.include_router(api_router, prefix="/v1")
 # https://fastapi.tiangolo.com/tutorial/metadata/
 
 # reverse proxy and system serice manager
-# https://docs.sisk-framework.org/docs/deploying/production/
 # https://medium.com/@kevinzeladacl/deploy-a-fastapi-app-with-nginx-and-gunicorn-b66ac14cdf5a
 # https://fastapi.tiangolo.com/advanced/behind-a-proxy/
