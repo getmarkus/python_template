@@ -18,6 +18,7 @@ class BaseEvent(Protocol):
     event_id: str
     timestamp: datetime
 
+
 class AggregateRoot(BaseModel, abc.ABC):
     version: int = 0
 
