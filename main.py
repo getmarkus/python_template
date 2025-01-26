@@ -1,6 +1,7 @@
-from contextlib import asynccontextmanager
 import datetime
 import os
+import uuid
+from contextlib import asynccontextmanager
 from typing import Annotated, Any, Dict, Optional
 
 from fastapi import Depends, FastAPI
@@ -106,13 +107,50 @@ app = FastAPI(
 # Register global exception handler
 app.add_exception_handler(AppException, app_exception_handler)
 
+# middleware options
+# https://levelup.gitconnected.com/17-useful-middlewares-for-fastapi-that-you-should-know-about-951c2b0869c7
+# https://fastapi.tiangolo.com/tutorial/middleware/
+# https://http.dev/headers
+# CORS
+# Authorization and Authentication
+# Localization
+# Caching
+# Rate Limiting
+# Tracing
+# Dependency Injection
+# A/B testing
+# Metrics
+# Route security, ip address and user agent - TrustedHostMiddleware
+# gzip compression - GZipMiddleware
+# ssl enforcement - HTTPSRedirectMiddleware
+
+@app.middleware("http")
+async def add_request_id(request, call_next):
+    request_id = str(uuid.uuid4())
+    request.state.request_id = request_id
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    logger.info(f"Request {request_id} to {request.url.path}")
+    return response
+
+@app.middleware("http")
+async def add_process_time_header(request, call_next):
+    import time
+    start_time = time.perf_counter()
+    response = await call_next(request)
+    process_time = time.perf_counter() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    logger.info(f"Request to {request.url.path} took {process_time:.4f} seconds")
+    return response
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Set this to lock down if applicable to your use case
     # allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
     allow_credentials=False,  # Must be false if all origins (*) is allowed
     allow_methods=["*"],
-    allow_headers=["X-Forwarded-For", "Authorization", "Content-Type"],
+    allow_headers=["X-Forwarded-For", "Authorization", "Content-Type", "X-Request-ID"],
+    expose_headers=["X-Process-Time", "X-Request-ID"]
 )
 
 

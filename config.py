@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     # "http://localhost:8080", "http://local.dockertoolbox.tiangolo.com"]'
     backend_cors_origins: List[AnyHttpUrl] = []
 
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra="allow")
     # `.env.prod` takes priority over `.env`
     #   env_file=('.env', '.env.prod')
 

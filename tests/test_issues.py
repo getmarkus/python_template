@@ -15,7 +15,7 @@ def test_analyze_issue():
     try:
         response = client.post("/issues/abc/analyze")
         assert response.status_code == 422
-        #assert response.json() == {"detail": "Invalid issue number"}
+        # assert response.json() == {"detail": "Invalid issue number"}
     except Exception as e:
         print(response.status_code)
         print(f"An error occurred: {e}")

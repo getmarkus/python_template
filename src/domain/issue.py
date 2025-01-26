@@ -1,6 +1,8 @@
+from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
-from typing import Optional
+from enum import Enum, auto
+from types import MappingProxyType
+from typing import Any, Final, Optional
 
 from src.domain.aggregate_root import AggregateRoot, BaseCommand, BaseEvent
 
@@ -11,18 +13,19 @@ from src.domain.aggregate_root import AggregateRoot, BaseCommand, BaseEvent
 # https://docs.github.com/en/rest/issues/timeline?apiVersion=2022-11-28
 # https://github.blog/open-source/maintainers/metrics-for-issues-pull-requests-and-discussions/
 
-class IssueState(Enum):
-    OPEN = "OPEN"
-    CLOSED = "CLOSED"
+### Enums ###
 
-    @property
-    def is_open(self):
-        return self == IssueState.OPEN
-
-class IssueStateTransition(Enum):
+class IssueTransitionState(Enum):
     COMPLETED = "COMPLETED"
     NOT_PLANNED = "NOT_PLANNED"
     REOPENED = "REOPENED"
+
+
+class IssueTransitionType(Enum):
+    CLOSE_AS_COMPLETE = auto()
+    CLOSE_AS_NOT_PLANNED = auto()
+    REOPEN = auto()
+
 
 class IssueEventType(Enum):
     OPENED = "OPENED"
@@ -34,15 +37,94 @@ class IssueEventType(Enum):
     LABLED = "LABLED"
     UNLABLED = "UNLABLED"
 
+
+# https://github.com/pytransitions/transitions?tab=readme-ov-file#transitions
+# https://python-statemachine.readthedocs.io/en/latest/auto_examples/persistent_model_machine.html
+# important features of state machines:
+# States, Transistions, Events, Actions(state, transition), Conditions, Validators (guard), Listeners
+# State Actions: on_enter, on_exit
+# Transition Actions: before, on, after
+
+
+@dataclass(frozen=True)
+class StateTransition:
+    """Represents a valid transition between states"""
+
+    from_state: "IssueState"
+    to_state: "IssueState"
+
+
+class IssueState(Enum):
+    OPEN = "OPEN"
+    CLOSED = "CLOSED"
+
+    @classmethod
+    def transitions(cls) -> dict[IssueTransitionType, StateTransition]:
+        """Get the valid state transitions"""
+        return _ISSUE_STATE_TRANSITIONS
+
+    @property
+    def is_open(self) -> bool:
+        return self == IssueState.OPEN
+
+    def transition(self, transition_type: IssueTransitionType) -> "IssueState":
+        """
+        Change the state based on the given transition type, enforcing valid transitions.
+        Args:
+            transition_type: The type of transition to perform
+        Returns:
+            The new IssueState after the transition
+        Raises:
+            ValueError: If the transition is not valid for the current state
+        """
+        if not isinstance(transition_type, IssueTransitionType):
+            raise ValueError(f"Unknown transition type: {transition_type}")
+
+        try:
+            transition = self.transitions()[transition_type]
+        except KeyError as err:
+            raise ValueError(f"Unknown transition type: {transition_type}") from err
+
+        if self != transition.from_state:
+            raise ValueError(
+                f"Cannot perform {transition_type.name} transition from state {self.value}"
+            )
+
+        return transition.to_state
+
+
+# Define valid transitions using the type-safe StateTransition class
+_ISSUE_STATE_TRANSITIONS: Final[dict[IssueTransitionType, StateTransition]] = (
+    MappingProxyType(
+        {
+            IssueTransitionType.CLOSE_AS_COMPLETE: StateTransition(
+                IssueState.OPEN, IssueState.CLOSED
+            ),
+            IssueTransitionType.CLOSE_AS_NOT_PLANNED: StateTransition(
+                IssueState.OPEN, IssueState.CLOSED
+            ),
+            IssueTransitionType.REOPEN: StateTransition(
+                IssueState.CLOSED, IssueState.OPEN
+            ),
+        }
+    )
+)
+
+
+### Exceptions ###
+
+### Value Objects ###
+
+
 ### Events ###
 class IssueEvent(BaseEvent):
     event_id: str
     timestamp: datetime
     issue_number: int
     issue_state: IssueState
-    issue_state_transition: IssueStateTransition
+    issue_state_transition: IssueTransitionState
     issue_event_type: IssueEventType
-    changes: dict[str, any]
+    changes: dict[str, Any]
     previous_title: str
     previous_body: str
     assignee: Optional[str]
@@ -54,13 +136,13 @@ class IssueEvent(BaseEvent):
         timestamp: datetime,
         issue_number: int,
         issue_state: IssueState,
-        issue_state_transition: IssueStateTransition,
+        issue_state_transition: IssueTransitionState,
         issue_event_type: IssueEventType,
-        changes: dict[str, any],
+        changes: dict[str, Any],
         previous_title: str,
         previous_body: str,
         assignee: Optional[str] = None,
-        label: Optional[str] = None
+        label: Optional[str] = None,
     ):
         super().__init__()
         self.event_id = event_id
@@ -74,6 +156,7 @@ class IssueEvent(BaseEvent):
         self.previous_body = previous_body
         self.assignee = assignee
         self.label = label
+
 
 ## potential sub-events
 # - connected
@@ -95,19 +178,11 @@ class IssueEvent(BaseEvent):
 # - user_blocked
 # - commented OR IssueCommentEvent
 
-### Commands ###
-class IssueCommand(BaseCommand):
-    command_id: str
-    timestamp: datetime
-    issue_number: int
-
-    # might need specification pattern here
-    def validate(self) -> bool:
-        return True
 
 ### Entitites ###
 class Issue(AggregateRoot):
     issue_number: int
+    issue_state: IssueState = IssueState.OPEN
 
     def process(self, command: BaseCommand) -> list[BaseEvent]:
         if command.validate():
@@ -120,6 +195,13 @@ class Issue(AggregateRoot):
 
     # likely need a handler method here for 'domain' events and not aggregate events
 
-### Exceptions ###
 
-### Value Objects ###
+### Commands ###
+class IssueCommand(BaseCommand):
+    command_id: str
+    timestamp: datetime
+    issue: Issue
+
+    # might need specification pattern here
+    def validate(self) -> bool:
+        return True
