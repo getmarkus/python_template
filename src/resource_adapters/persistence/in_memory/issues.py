@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, List
+from typing import Callable, List
 
 from loguru import logger
 
