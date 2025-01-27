@@ -1,7 +1,7 @@
+import tomllib
 from functools import lru_cache
 from typing import List
 
-import tomllib
 from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     execution_mode: str = ""
     env_smoke_test: str = ""
     project_name: str = ""
+    database_url: str = "sqlite:///./issues.db"
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
     # "http://localhost:8080", "http://local.dockertoolbox.tiangolo.com"]'

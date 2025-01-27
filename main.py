@@ -34,6 +34,12 @@ async def lifespan(app: FastAPI):
     global running
     running = True
     logger.info("Lifespan started")
+
+    # Initialize database if using SQLModel
+    if Settings.get_settings().execution_mode == "sqlmodel":
+        from src.resource_adapters.persistence.sqlmodel.database import init_db
+        init_db()
+
     yield
     running = False
     logger.info("Lifespan stopped")
