@@ -2,7 +2,7 @@ import abc
 from datetime import datetime
 from typing import Protocol
 
-from pydantic import BaseModel
+from sqlmodel import SQLModel
 
 
 class BaseCommand(Protocol):
@@ -10,8 +10,7 @@ class BaseCommand(Protocol):
     timestamp: datetime
 
     # might need specification pattern here
-    def validate(self) -> bool:
-        ...
+    def validate(self) -> bool: ...
 
 
 class BaseEvent(Protocol):
@@ -19,7 +18,7 @@ class BaseEvent(Protocol):
     timestamp: datetime
 
 
-class AggregateRoot(BaseModel, abc.ABC):
+class AggregateRoot(SQLModel, abc.ABC):
     version: int = 0
 
     # or handle()

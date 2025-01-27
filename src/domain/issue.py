@@ -4,6 +4,8 @@ from enum import Enum, auto
 from types import MappingProxyType
 from typing import Any, Final, Optional
 
+from sqlmodel import Field
+
 from src.domain.aggregate_root import AggregateRoot, BaseCommand, BaseEvent
 
 # https://docs.github.com/en/rest/using-the-rest-api/github-event-types?apiVersion=2022-11-28#issuesevent
@@ -14,6 +16,7 @@ from src.domain.aggregate_root import AggregateRoot, BaseCommand, BaseEvent
 # https://github.blog/open-source/maintainers/metrics-for-issues-pull-requests-and-discussions/
 
 ### Enums ###
+
 
 class IssueTransitionState(Enum):
     COMPLETED = "COMPLETED"
@@ -180,8 +183,8 @@ class IssueEvent(BaseEvent):
 
 
 ### Entitites ###
-class Issue(AggregateRoot):
-    issue_number: int
+class Issue(AggregateRoot, table=True):
+    issue_number: int = Field(primary_key=True)
     issue_state: IssueState = IssueState.OPEN
 
     def process(self, command: BaseCommand) -> list[BaseEvent]:

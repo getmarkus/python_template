@@ -16,7 +16,7 @@ class UnitOfWork(UnitOfWork):
         self.committed = False
 
     def __enter__(self) -> "UnitOfWork":
-        logger.info(f"enter uow")
+        logger.info("enter uow")
         return self
 
     def __exit__(
@@ -26,8 +26,8 @@ class UnitOfWork(UnitOfWork):
         exc_tb: TracebackType,
     ) -> None:
         if exc_type:
-            logger.info(f"exit rollback uow")
+            logger.info("exit rollback uow")
             self.rollback()
         else:
-            logger.info(f"exit commit uow")
+            logger.info("exit commit uow")
             self.commit()
