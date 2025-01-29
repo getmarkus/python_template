@@ -5,7 +5,7 @@ from loguru import logger
 from src.app.repository import UnitOfWork
 
 
-class UnitOfWork(UnitOfWork):
+class InMemoryUnitOfWork(UnitOfWork):
     def __init__(self) -> None:
         self.committed = False
 
@@ -15,15 +15,15 @@ class UnitOfWork(UnitOfWork):
     def rollback(self) -> None:
         self.committed = False
 
-    def __enter__(self) -> "UnitOfWork":
+    def __enter__(self) -> "InMemoryUnitOfWork":
         logger.info("enter uow")
         return self
 
     def __exit__(
         self,
-        exc_type: type[BaseException],
-        exc_val: BaseException,
-        exc_tb: TracebackType,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         if exc_type:
             logger.info("exit rollback uow")

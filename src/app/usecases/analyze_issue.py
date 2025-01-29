@@ -1,21 +1,13 @@
-from abc import abstractmethod
 from typing import Protocol
 
 from loguru import logger
 
 from src.app.ports.repositories.issues import IssueRepository
-from src.app.repository import UnitOfWork
 from src.domain.issue import Issue
 from src.interface_adapters.exceptions import NotFoundException
 
 
-class AnalyzeIssueProtocol(Protocol):
-    @abstractmethod
-    async def analyze(self) -> Issue:
-        raise NotImplementedError
-
-
-class AnalyzeIssue(AnalyzeIssueProtocol):
+class AnalyzeIssue(Protocol):
     # or could be a DTO as a inner class
     # or could be a empty/minimal Issue object
     issue_number: int = 0
@@ -24,18 +16,16 @@ class AnalyzeIssue(AnalyzeIssueProtocol):
         self,
         issue_number: int,
         repo: IssueRepository,
-        unit_of_work: UnitOfWork,
     ) -> None:
         self.issue_number = issue_number
         self.repo = repo
-        self.unit_of_work = unit_of_work
 
-    async def analyze(self) -> Issue:
+    def analyze(self) -> Issue:
         logger.info(f"analyzing issue: {self.issue_number}")
-        issue = await self.repo.get_by_id(self.issue_number)
+        issue = self.repo.get_by_id(self.issue_number)
         if issue.issue_number == 0:
             raise NotFoundException(
                 message="Issue not found",
-                detail=f"Issue with number {self.issue_number} does not exist"
+                detail=f"Issue with number {self.issue_number} does not exist",
             )
         return issue

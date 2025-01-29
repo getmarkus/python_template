@@ -1,13 +1,20 @@
+from typing import Generator
+
 from loguru import logger
-from sqlmodel import SQLModel, create_engine
+from sqlalchemy.engine import Engine
+from sqlmodel import Session, SQLModel, create_engine
 
 from config import Settings
-from src.domain.issue import Issue  # noqa: F401
 
-_engine = None
+_engine: Engine | None = None
 
 
-def get_engine(database_url: str | None = None):
+def get_db() -> Generator[Session, None, None]:
+    with Session(_engine) as session:
+        yield session
+
+
+def get_engine(database_url: str | None = None) -> Engine:
     """Get or create SQLModel engine instance."""
     global _engine
 
@@ -16,11 +23,10 @@ def get_engine(database_url: str | None = None):
 
     if database_url is None:
         database_url = Settings.get_settings().database_url
-        if not database_url:
-            database_url = "sqlite:///./issues.db"
-            logger.warning(f"No database URL configured, using default: {database_url}")
 
-    _engine = create_engine(database_url,connect_args={"check_same_thread": False}, echo=True)
+    _engine = create_engine(
+        database_url, connect_args={"check_same_thread": False}, echo=True
+    )
     return _engine
 
 
