@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     env_smoke_test: str = ""
     project_name: str = ""
     database_url: str = "sqlite:///./issues.db"
+    migrate_database: bool = True
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
     # "http://localhost:8080", "http://local.dockertoolbox.tiangolo.com"]'

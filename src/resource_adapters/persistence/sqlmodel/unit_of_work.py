@@ -4,20 +4,11 @@ from loguru import logger
 from sqlmodel import Session
 
 from src.app.repository import UnitOfWork
-from src.resource_adapters.persistence.sqlmodel.database import get_engine
-from src.resource_adapters.persistence.sqlmodel.issues import SQLModelIssueRepository
 
 
 class SQLModelUnitOfWork(UnitOfWork):
-    def __init__(self, database_url: str = "sqlite:///./issues.db") -> None:
-        self.database_url = database_url
-        self._engine = get_engine(database_url)
-        self.session: Session | None = None
-        self.issues: SQLModelIssueRepository | None = None
-
-    @property
-    def engine(self):
-        return self._engine
+    def __init__(self, session: Session | None = None) -> None:
+        self.session: Session = session
 
     def commit(self) -> None:
         if self.session:
@@ -29,8 +20,6 @@ class SQLModelUnitOfWork(UnitOfWork):
 
     def __enter__(self) -> "SQLModelUnitOfWork":
         logger.info("enter sqlmodel uow")
-        self.session = Session(self._engine)
-        self.issues = SQLModelIssueRepository(self.session)
         return self
 
     def __exit__(
@@ -48,5 +37,3 @@ class SQLModelUnitOfWork(UnitOfWork):
 
         if self.session:
             self.session.close()
-            self.session = None
-            self.issues = None

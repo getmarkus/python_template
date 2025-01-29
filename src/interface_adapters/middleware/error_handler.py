@@ -5,7 +5,7 @@ from loguru import logger
 from src.interface_adapters.exceptions import AppException
 
 
-async def app_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+def app_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     if isinstance(exc, AppException):
         logger.error(f"Request to {request.url} failed: {exc.message}")
         if exc.detail:

@@ -14,6 +14,7 @@ from config import Settings
 from src.interface_adapters import api_router
 from src.interface_adapters.exceptions import AppException
 from src.interface_adapters.middleware.error_handler import app_exception_handler
+from src.resource_adapters.persistence.sqlmodel.database import init_db
 
 # https://brandur.org/logfmt
 # https://github.com/Delgan/loguru
@@ -36,8 +37,7 @@ async def lifespan(app: FastAPI):
     logger.info("Lifespan started")
 
     # Initialize database if using SQLModel
-    if Settings.get_settings().execution_mode == "sqlmodel":
-        from src.resource_adapters.persistence.sqlmodel.database import init_db
+    if Settings.get_settings().execution_mode == "sqlmodel" and not Settings.get_settings().migrate_database:
         init_db()
 
     yield
