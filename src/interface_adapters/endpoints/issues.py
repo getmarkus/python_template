@@ -19,7 +19,6 @@ router = APIRouter()
 # https://fastapi.tiangolo.com/tutorial/dependencies/
 def configure_repository(
     session: Annotated[Session, Depends(get_db)]
-    #session: SessionDep,
 ) -> IssueRepository:
     execution_mode = Settings.get_settings().execution_mode
     if execution_mode == "in-memory":

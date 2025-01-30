@@ -23,6 +23,7 @@ class AnalyzeIssue(Protocol):
     def analyze(self) -> Issue:
         logger.info(f"analyzing issue: {self.issue_number}")
         issue = self.repo.get_by_id(self.issue_number)
+        logger.info(f"issue: {issue}")
         if issue.issue_number == 0:
             raise NotFoundException(
                 message="Issue not found",
