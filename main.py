@@ -21,27 +21,28 @@ from src.resource_adapters.persistence.sqlmodel.database import init_db
 # https://betterstack.com/community/guides/logging/loguru/
 
 env = os.getenv("PYTHON_TEMPLATE_ENV", ".env")
-running = False
-
 
 def isRunning() -> bool:
-    logger.info(f"running: {running}")
+    #logger.info(f"App state: {dict(app.state.__dict__)}")
+    running = getattr(app.state, "running", False)
+    logger.info(f"Running state: {running}")
     return running
 
 
 # https://fastapi.tiangolo.com/advanced/events/
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global running
-    running = True
+    app.state.running = True
     logger.info("Lifespan started")
+    logger.info(f"App state: {dict(app.state.__dict__)}")
+    logger.info(app.state.running)
 
     # Initialize database if using SQLModel
     if Settings.get_settings().execution_mode == "sqlmodel" and not Settings.get_settings().migrate_database:
         init_db()
 
     yield
-    running = False
+    app.state.running = False
     logger.info("Lifespan stopped")
 
 
@@ -164,7 +165,6 @@ app.add_middleware(
 async def root(
     settings: Annotated[Settings, Depends(Settings.get_settings)],
 ) -> Dict[str, Any]:
-    logger.info(f"running: {running}")
     return {
         "app_name": settings.project_name,
         "system_time": datetime.datetime.now(),
