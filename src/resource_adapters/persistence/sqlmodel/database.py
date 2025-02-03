@@ -27,6 +27,10 @@ def get_engine(database_url: str | None = None) -> Engine:
     _engine = create_engine(
         database_url, connect_args={"check_same_thread": False}, echo=True
     )
+    # Initialize database if using SQLModel
+    if Settings.get_settings().execution_mode == "sqlmodel" and not Settings.get_settings().migrate_database:
+        init_db()
+        
     return _engine
 
 
