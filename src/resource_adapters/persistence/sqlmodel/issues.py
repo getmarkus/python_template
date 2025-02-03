@@ -1,6 +1,7 @@
-from typing import Callable, List
+from typing import Callable, List, Union
 
 from loguru import logger
+from sqlalchemy.sql.elements import BinaryExpression, BooleanClauseList, ClauseElement
 from sqlmodel import Session, select
 
 from src.app.ports.repositories.issues import IssueRepository
@@ -25,11 +26,19 @@ class SQLModelIssueRepository(SQLModelUnitOfWork, IssueRepository):
         results = self.session.exec(statement).all()
         return results
 
-    def list_with_predicate(self, predicate: Callable[[Issue], bool]) -> List[Issue]:
-        # First get all issues and then filter in memory
-        # For better performance, specific predicates could be translated to SQL filters
-        all_issues = self.list()
-        return [issue for issue in all_issues if predicate(issue)]
+    def list_with_predicate(
+        self, predicate: Union[Callable[[Issue], bool], ClauseElement]
+    ) -> List[Issue]:
+        if isinstance(predicate, (BinaryExpression, BooleanClauseList)):
+            # If we're passed a SQLModel/SQLAlchemy filter condition, use it directly
+            # open_issues = repo.list_with_predicate(Issue.issue_state == IssueState.OPEN)
+            statement = select(Issue).where(predicate)
+            return self.session.exec(statement).all()
+        else:
+            # Fall back to in-memory filtering for complex predicates that can't be expressed in SQL
+            # open_issues = repository.list_with_predicate(lambda issue: issue.issue_state == IssueState.OPEN)
+            all_issues = self.list()
+            return [issue for issue in all_issues if predicate(issue)]
 
     def add(self, entity: Issue) -> None:
         logger.info(f"adding issue: {entity.issue_number}")
@@ -45,6 +54,7 @@ class SQLModelIssueRepository(SQLModelUnitOfWork, IssueRepository):
             # Update fields from the detached entity
             existing.issue_state = entity.issue_state
             existing.version = entity.version
+            self.session.add(existing)
 
     def remove(self, entity: Issue) -> None:
         logger.info(f"removing issue: {entity}")
