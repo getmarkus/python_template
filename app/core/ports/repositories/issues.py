@@ -1,5 +1,5 @@
 from typing import Callable, Iterable, Protocol
-from src.domain.issue import Issue
+from app.domain.issue import Issue
 
 class IssueRepository(Protocol):
     # or get

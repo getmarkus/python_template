@@ -2,8 +2,8 @@ import pytest
 from sqlmodel import Session, SQLModel, and_, create_engine
 from sqlmodel.pool import StaticPool
 
-from src.domain.issue import Issue, IssueState
-from src.resource_adapters.persistence.sqlmodel.issues import SQLModelIssueRepository
+from app.domain.issue import Issue, IssueState
+from app.resource_adapters.persistence.sqlmodel.issues import SQLModelIssueRepository
 
 
 @pytest.fixture(name="session")

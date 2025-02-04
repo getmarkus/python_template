@@ -3,7 +3,7 @@ from types import TracebackType
 from loguru import logger
 from sqlmodel import Session
 
-from src.core.repository import UnitOfWork
+from app.core.repository import UnitOfWork
 
 
 class SQLModelUnitOfWork(UnitOfWork):

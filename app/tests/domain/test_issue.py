@@ -1,6 +1,6 @@
 import pytest
 
-from src.domain.issue import IssueState, IssueTransitionType
+from app.domain.issue import IssueState, IssueTransitionType
 
 
 def test_initial_state():

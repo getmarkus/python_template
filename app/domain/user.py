@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import EmailStr
 
-from src.domain.aggregate_root import AggregateRoot, BaseCommand, BaseEvent
+from app.domain.aggregate_root import AggregateRoot, BaseCommand, BaseEvent
 
 
 class UserCommand(BaseCommand):

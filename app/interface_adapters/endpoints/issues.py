@@ -5,13 +5,13 @@ from loguru import logger
 from sqlmodel import Session
 
 from config import Settings
-from src.core.ports.repositories.issues import IssueRepository
-from src.core.usecases.analyze_issue import AnalyzeIssue
-from src.domain.issue import Issue
-from src.interface_adapters.exceptions import UnsupportedOperationException
-from src.resource_adapters.persistence.in_memory.issues import InMemoryIssueRepository
-from src.resource_adapters.persistence.sqlmodel.database import get_db
-from src.resource_adapters.persistence.sqlmodel.issues import SQLModelIssueRepository
+from app.core.ports.repositories.issues import IssueRepository
+from app.core.usecases.analyze_issue import AnalyzeIssue
+from app.domain.issue import Issue
+from app.interface_adapters.exceptions import UnsupportedOperationException
+from app.resource_adapters.persistence.in_memory.issues import InMemoryIssueRepository
+from app.resource_adapters.persistence.sqlmodel.database import get_db
+from app.resource_adapters.persistence.sqlmodel.issues import SQLModelIssueRepository
 
 router = APIRouter()
 
