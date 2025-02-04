@@ -5,8 +5,8 @@ from loguru import logger
 from sqlmodel import Session
 
 from config import Settings
-from src.app.ports.repositories.issues import IssueRepository
-from src.app.usecases.analyze_issue import AnalyzeIssue
+from src.core.ports.repositories.issues import IssueRepository
+from src.core.usecases.analyze_issue import AnalyzeIssue
 from src.domain.issue import Issue
 from src.interface_adapters.exceptions import UnsupportedOperationException
 from src.resource_adapters.persistence.in_memory.issues import InMemoryIssueRepository

@@ -2,7 +2,7 @@ from typing import Protocol
 
 from loguru import logger
 
-from src.app.ports.repositories.issues import IssueRepository
+from src.core.ports.repositories.issues import IssueRepository
 from src.domain.issue import Issue
 from src.interface_adapters.exceptions import NotFoundException
 

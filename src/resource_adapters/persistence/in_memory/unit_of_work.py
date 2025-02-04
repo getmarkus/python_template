@@ -2,7 +2,7 @@ from types import TracebackType
 
 from loguru import logger
 
-from src.app.repository import UnitOfWork
+from src.core.repository import UnitOfWork
 
 
 class InMemoryUnitOfWork(UnitOfWork):

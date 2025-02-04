@@ -2,7 +2,7 @@ from typing import Callable, List
 
 from loguru import logger
 
-from src.app.ports.repositories.issues import IssueRepository
+from src.core.ports.repositories.issues import IssueRepository
 from src.domain.issue import Issue
 from src.resource_adapters.persistence.in_memory.unit_of_work import InMemoryUnitOfWork
 
