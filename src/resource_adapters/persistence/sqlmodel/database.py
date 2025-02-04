@@ -25,18 +25,13 @@ def get_engine(database_url: str | None = None) -> Engine:
         database_url = Settings.get_settings().database_url
 
     _engine = create_engine(
-        database_url, connect_args={"check_same_thread": False}, echo=True
+        database_url, echo=True
     )
     # Initialize database if using SQLModel
     if Settings.get_settings().execution_mode == "sqlmodel" and not Settings.get_settings().migrate_database:
-        init_db()
+        logger.info("Creating database tables...")
+        SQLModel.metadata.create_all(_engine)
+        logger.info("Database tables created successfully")
         
     return _engine
 
-
-def init_db() -> None:
-    """Initialize the database by creating all tables."""
-    engine = get_engine()
-    logger.info("Creating database tables...")
-    SQLModel.metadata.create_all(engine)
-    logger.info("Database tables created successfully")

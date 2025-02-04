@@ -4,7 +4,7 @@ from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
 from main import app
-from src.app.usecases.analyze_issue import AnalyzeIssue
+from src.core.usecases.analyze_issue import AnalyzeIssue
 from src.domain.issue import Issue, IssueState
 from src.interface_adapters.exceptions import NotFoundException
 from src.resource_adapters.persistence.sqlmodel.database import get_db
@@ -24,13 +24,13 @@ def session_fixture():
 
 @pytest.fixture(name="client")
 def client_fixture(session: Session):
-    # def get_session_override():
-    #     return session
+    def get_session_override():
+         return session
 
-    # app.dependency_overrides[get_db] = get_session_override
+    app.dependency_overrides[get_db] = get_session_override
     with TestClient(app, raise_server_exceptions=False) as client:
         yield client
-        #app.dependency_overrides.clear()
+        app.dependency_overrides.clear()
 
 
 def test_analyze_issue_command(client: TestClient, session: Session):

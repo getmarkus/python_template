@@ -1,5 +1,4 @@
 import datetime
-import os
 import uuid
 from contextlib import asynccontextmanager
 from typing import Annotated, Any, Dict, Optional
@@ -14,12 +13,11 @@ from config import Settings
 from src.interface_adapters import api_router
 from src.interface_adapters.exceptions import AppException
 from src.interface_adapters.middleware.error_handler import app_exception_handler
+from src.resource_adapters.persistence.sqlmodel.database import get_engine
 
 # https://brandur.org/logfmt
 # https://github.com/Delgan/loguru
 # https://betterstack.com/community/guides/logging/loguru/
-
-env = os.getenv("PYTHON_TEMPLATE_ENV", ".env")
 
 def isRunning() -> bool:
     #logger.info(f"App state: {dict(app.state.__dict__)}")
@@ -31,6 +29,10 @@ def isRunning() -> bool:
 # https://fastapi.tiangolo.com/advanced/events/
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+
+    # Initialize database if using SQLModel
+    get_engine()
+
     app.state.running = True
     logger.info("Lifespan started")
     logger.info(f"App state: {dict(app.state.__dict__)}")
