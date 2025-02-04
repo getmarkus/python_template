@@ -4,11 +4,11 @@ from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
 from main import app
-from src.core.usecases.analyze_issue import AnalyzeIssue
-from src.domain.issue import Issue, IssueState
-from src.interface_adapters.exceptions import NotFoundException
-from src.resource_adapters.persistence.sqlmodel.database import get_db
-from src.resource_adapters.persistence.sqlmodel.issues import SQLModelIssueRepository
+from app.core.usecases.analyze_issue import AnalyzeIssue
+from app.domain.issue import Issue, IssueState
+from app.interface_adapters.exceptions import NotFoundException
+from app.resource_adapters.persistence.sqlmodel.database import get_db
+from app.resource_adapters.persistence.sqlmodel.issues import SQLModelIssueRepository
 
 
 # https://sqlmodel.tiangolo.com/tutorial/fastapi/tests/

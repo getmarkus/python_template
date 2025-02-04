@@ -2,9 +2,9 @@ from typing import Protocol
 
 from loguru import logger
 
-from src.core.ports.repositories.issues import IssueRepository
-from src.domain.issue import Issue
-from src.interface_adapters.exceptions import NotFoundException
+from app.core.ports.repositories.issues import IssueRepository
+from app.domain.issue import Issue
+from app.interface_adapters.exceptions import NotFoundException
 
 
 class AnalyzeIssue(Protocol):

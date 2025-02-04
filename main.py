@@ -10,10 +10,10 @@ from loguru import logger
 from pydantic import BaseModel, Field
 
 from config import Settings
-from src.interface_adapters import api_router
-from src.interface_adapters.exceptions import AppException
-from src.interface_adapters.middleware.error_handler import app_exception_handler
-from src.resource_adapters.persistence.sqlmodel.database import get_engine
+from app.interface_adapters import api_router
+from app.interface_adapters.exceptions import AppException
+from app.interface_adapters.middleware.error_handler import app_exception_handler
+from app.resource_adapters.persistence.sqlmodel.database import get_engine
 
 # https://brandur.org/logfmt
 # https://github.com/Delgan/loguru

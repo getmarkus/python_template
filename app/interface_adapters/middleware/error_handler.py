@@ -2,7 +2,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from loguru import logger
 
-from src.interface_adapters.exceptions import AppException
+from app.interface_adapters.exceptions import AppException
 
 
 def app_exception_handler(request: Request, exc: Exception) -> JSONResponse:

@@ -4,9 +4,9 @@ from loguru import logger
 from sqlalchemy.sql.elements import BinaryExpression, BooleanClauseList, ClauseElement
 from sqlmodel import Session, select
 
-from src.core.ports.repositories.issues import IssueRepository
-from src.domain.issue import Issue
-from src.resource_adapters.persistence.sqlmodel.unit_of_work import SQLModelUnitOfWork
+from app.core.ports.repositories.issues import IssueRepository
+from app.domain.issue import Issue
+from app.resource_adapters.persistence.sqlmodel.unit_of_work import SQLModelUnitOfWork
 
 
 class SQLModelIssueRepository(SQLModelUnitOfWork, IssueRepository):

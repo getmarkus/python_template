@@ -6,7 +6,7 @@ from typing import Any, Final, Optional
 
 from sqlmodel import Field
 
-from src.domain.aggregate_root import AggregateRoot, BaseCommand, BaseEvent
+from app.domain.aggregate_root import AggregateRoot, BaseCommand, BaseEvent
 
 # https://docs.github.com/en/rest/using-the-rest-api/github-event-types?apiVersion=2022-11-28#issuesevent
 # https://docs.github.com/en/rest/using-the-rest-api/issue-event-types?apiVersion=2022-11-28
