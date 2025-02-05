@@ -2,7 +2,6 @@ from typing import Generator
 
 from loguru import logger
 from sqlalchemy.engine import Engine
-from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
 
 from config import Settings
