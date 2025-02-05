@@ -1,28 +1,30 @@
 import datetime
 import uuid
 from contextlib import asynccontextmanager
-from typing import Annotated, Any, Dict, Optional
+from typing import Any, Dict, Optional
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from config import Settings
 from app.interface_adapters import api_router
 from app.interface_adapters.exceptions import AppException
 from app.interface_adapters.middleware.error_handler import app_exception_handler
 from app.resource_adapters.persistence.sqlmodel.database import get_engine
+from config import settings
 
 # https://brandur.org/logfmt
 # https://github.com/Delgan/loguru
 # https://betterstack.com/community/guides/logging/loguru/
 
+
 def isRunning() -> bool:
-    #logger.info(f"App state: {dict(app.state.__dict__)}")
+    # logger.info(f"App state: {dict(app.state.__dict__)}")
     running = getattr(app.state, "running", False)
     logger.info(f"Running state: {running}")
+    logger.info(f"Environment: {settings.current_env}")
     return running
 
 
@@ -35,8 +37,7 @@ async def lifespan(app: FastAPI):
 
     app.state.running = True
     logger.info("Lifespan started")
-    logger.info(f"App state: {dict(app.state.__dict__)}")
-    logger.info(app.state.running)
+    isRunning()
 
     yield
 
@@ -45,8 +46,8 @@ async def lifespan(app: FastAPI):
 
 
 def is_configured() -> bool:
-    logger.info(f"configured: {Settings.get_settings().env_smoke_test == "configured"}")
-    return Settings.get_settings().env_smoke_test == "configured"
+    logger.info(f"configured: {settings.env_smoke_test == 'configured'}")
+    return settings.env_smoke_test == "configured"
 
 
 """ {
@@ -86,7 +87,7 @@ def create_health_response(is_healthy: bool, check_name: str) -> JSONResponse:
     status = "pass" if is_healthy else "fail"
     response = HealthCheck(
         status=status,
-        version=Settings.get_settings().project_name,
+        version=settings.project_name,
         description=f"Service {status}",
         checks={
             check_name: {
@@ -105,7 +106,7 @@ def create_health_response(is_healthy: bool, check_name: str) -> JSONResponse:
 
 app = FastAPI(
     lifespan=lifespan,
-    title=Settings.get_settings().project_name,
+    title=settings.project_name,  # Use settings directly
     openapi_url="/v1/openapi.json",
 )
 
@@ -129,6 +130,7 @@ app.add_exception_handler(AppException, app_exception_handler)
 # gzip compression - GZipMiddleware
 # ssl enforcement - HTTPSRedirectMiddleware
 
+
 @app.middleware("http")
 async def add_request_id(request, call_next):
     request_id = str(uuid.uuid4())
@@ -138,9 +140,11 @@ async def add_request_id(request, call_next):
     logger.info(f"Request {request_id} to {request.url.path}")
     return response
 
+
 @app.middleware("http")
 async def add_process_time_header(request, call_next):
     import time
+
     start_time = time.perf_counter()
     response = await call_next(request)
     process_time = time.perf_counter() - start_time
@@ -148,21 +152,23 @@ async def add_process_time_header(request, call_next):
     logger.info(f"Request to {request.url.path} took {process_time:.4f} seconds")
     return response
 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Set this to lock down if applicable to your use case
-    # allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-    allow_credentials=False,  # Must be false if all origins (*) is allowed
-    allow_methods=["*"],
-    allow_headers=["X-Forwarded-For", "Authorization", "Content-Type", "X-Request-ID"],
-    expose_headers=["X-Process-Time", "X-Request-ID"]
+    allow_origins=(
+        [str(origin) for origin in settings.backend_cors_origins]
+        if settings.backend_cors_origins
+        else ["*"]
+    ),
+    allow_credentials=settings.cors_allow_credentials,
+    allow_methods=settings.cors_allow_methods,
+    allow_headers=settings.cors_allow_headers,
+    expose_headers=settings.cors_expose_headers,
 )
 
 
 @app.get("/")
-async def root(
-    settings: Annotated[Settings, Depends(Settings.get_settings)],
-) -> Dict[str, Any]:
+async def root() -> Dict[str, Any]:
     return {
         "app_name": settings.project_name,
         "system_time": datetime.datetime.now(),
@@ -170,15 +176,13 @@ async def root(
 
 
 @app.get("/info")
-async def info(
-    settings: Annotated[Settings, Depends(Settings.get_settings)],
-) -> Dict[str, Any]:
-    logger.info(settings.model_dump())
+async def info() -> Dict[str, Any]:
     return {
         "app_name": settings.project_name,
         "system_time": datetime.datetime.now(),
         "execution_mode": settings.execution_mode,
         "env_smoke_test": settings.env_smoke_test,
+        "env": settings.current_env,
     }
 
 
