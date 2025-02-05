@@ -19,7 +19,7 @@ def session_fixture():
 
 @pytest.fixture(name="client")
 def client_fixture(session: Session):
-    def get_session_override():  
+    def get_session_override():
         return session
 
     app.dependency_overrides[get_db] = get_session_override
