@@ -25,6 +25,7 @@ class AnalyzeIssue(Protocol):
         issue = self.repo.get_by_id(self.issue_number)
         logger.info(f"issue: {issue}")
         if issue.issue_number == 0:
+            logger.info(f"not found issue: {self.issue_number}")
             raise NotFoundException(
                 message="Issue not found",
                 detail=f"Issue with number {self.issue_number} does not exist",
