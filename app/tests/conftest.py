@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, delete
 
-from app.resource_adapters.persistence.sqlmodel.database import get_engine, get_db
+from app.resource_adapters.persistence.sqlmodel.database import get_engine
 from app.resource_adapters.persistence.sqlmodel.issues import Issue
 from main import app
 
@@ -19,11 +19,7 @@ def session_fixture():
 
 @pytest.fixture(name="client")
 def client_fixture(session: Session):
-    def get_session_override():
-        return session
-
-    app.dependency_overrides[get_db] = get_session_override
 
     with TestClient(app) as client:
         yield client
-        app.dependency_overrides.clear()
+
