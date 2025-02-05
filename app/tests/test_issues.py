@@ -35,9 +35,9 @@ def test_analyze_issue_client(client: TestClient, session: Session):
     repository.add(test_issue)
     repository.commit()
 
-    response = client.post("/issues/1/analyze")
-    # assert response.status_code == 200
-    assert response.json() == {"version": 1, "issue_number": 1}
+    response = client.post("/v1/issues/1/analyze")
+    assert response.status_code == 200
+    assert response.json() == {"issue_state": "OPEN", "version": 0, "issue_number": 1}
 
 
 def test_analyze_issue_not_found(client: TestClient, session: Session):
@@ -53,15 +53,14 @@ def test_analyze_issue_not_found(client: TestClient, session: Session):
         use_case.analyze()
     assert exc_info.value.message == "Issue not found"
 
-    response = client.post("/issues/1/analyze")
+    response = client.post("/v1/issues/1/analyze")
     assert response.status_code == 404
-    assert response.json() == {"version": 1, "issue_number": 1}
 
 
 def test_analyze_issue_invalid_number(client: TestClient, session: Session):
     """Test analyzing an issue with an invalid issue number."""
 
-    response = client.post("/issues/abc/analyze")
+    response = client.post("/v1/issues/abc/analyze")
     assert response.status_code == 422
     # Validate error response structure
     error_detail = response.json()["detail"]
@@ -72,6 +71,6 @@ def test_analyze_issue_invalid_number(client: TestClient, session: Session):
 
 def test_analyze_issue_unauthorized(client: TestClient):
     # Test case 3: Unauthorized access
-    response = client.post("/issues/456/analyze")
+    response = client.post("/v1/issues/456/analyze")
     assert response.status_code == 401
-    assert response.js_on() == {"detail": "Unauthorized"}
+    assert response.json() == {"detail": "Unauthorized"}

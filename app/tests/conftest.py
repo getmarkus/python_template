@@ -18,7 +18,7 @@ def session_fixture():
 
 
 @pytest.fixture(name="client")
-def client_fixture(session: Session):
+def client_fixture():
 
     with TestClient(app) as client:
         yield client
