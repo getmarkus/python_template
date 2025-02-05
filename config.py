@@ -1,40 +1,41 @@
-import tomllib
 from functools import lru_cache
 from typing import List
 
+from dynaconf import Dynaconf, Validator
 from pydantic import AnyHttpUrl
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# order matters
+# [default] settings in settings.toml are loaded first
+# [APP_ENV] settings override defaults
+# .env file overrides those
+# Environment variables have the highest priority
+# CLI arguments override those
+
+settings = Dynaconf(
+    envvar_prefix="APP",
+    settings_files=["settings.toml", ".secrets.toml"],
+    environments=True,
+    load_dotenv=True,
+    validators=[
+        Validator("database_url", must_exist=True),
+        Validator("project_name", must_exist=True),
+        Validator("migrate_database", is_type_of=bool),
+        Validator("backend_cors_origins", is_type_of=list),
+    ],
+)
 
 
-# https://fastapi.tiangolo.com/advanced/settings/
-# https://docs.pydantic.dev/latest/concepts/pydantic_settings/
-# https://docs.pydantic.dev/latest/concepts/pydantic_settings/#command-line-support
-class Settings(BaseSettings):
-    # https://stackoverflow.com/questions/70852331/how-to-define-class-attributes-after-inheriting-pydantics-basemodel
-    # https://stackoverflow.com/questions/69388833/triggering-a-function-on-creation-of-an-pydantic-object
-    pyproject_file: str = ""
-    execution_mode: str = ""
-    env_smoke_test: str = ""
-    project_name: str = ""
-    database_url: str = "sqlite:///./issues.db"
-    migrate_database: bool = False
-    # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
-    # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
-    # "http://localhost:8080", "http://local.dockertoolbox.tiangolo.com"]'
-    backend_cors_origins: List[AnyHttpUrl] = []
+# Singleton pattern to ensure only one settings instance
+@lru_cache()
+def get_settings():
+    return settings
 
-    model_config = SettingsConfigDict(env_file=".env", extra="allow")
-    # `.env.prod` takes priority over `.env`
-    #   env_file=('.env', '.env.prod')
 
-    def setFromTOML(self):
-        with open(self.pyproject_file, "rb") as f:
-            _META = tomllib.load(f)
-        self.project_name = _META["project"]["name"]
-
-    @classmethod
-    @lru_cache
-    def get_settings(cls):
-        settings = Settings(pyproject_file="pyproject.toml")
-        settings.setFromTOML()
-        return settings
+# Type hints for your settings (optional but recommended)
+class Settings:
+    project_name: str
+    database_url: str
+    migrate_database: bool
+    backend_cors_origins: List[AnyHttpUrl]
+    execution_mode: str
+    env_smoke_test: str

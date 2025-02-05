@@ -1,0 +1,32 @@
+[default]
+project_name = "python-template"
+database_url = "sqlite:///./issues.db"
+migrate_database = false
+execution_mode = "sqlmodel"
+env_smoke_test = ""
+
+# CORS Settings
+backend_cors_origins = []
+cors_allow_credentials = false
+cors_allow_methods = ["*"]
+cors_allow_headers = [
+  "X-Forwarded-For",
+  "Authorization",
+  "Content-Type",
+  "X-Request-ID",
+]
+cors_expose_headers = ["X-Process-Time", "X-Request-ID"]
+
+[development]
+# Development-specific settings
+backend_cors_origins = ["http://localhost:8000", "http://localhost:3000"]
+
+[production]
+# Production-specific settings
+backend_cors_origins = [] # Set specific origins in production
+cors_allow_methods = [
+  "GET",
+  "POST",
+  "PUT",
+  "DELETE",
+] # Be more restrictive in production
