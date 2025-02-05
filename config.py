@@ -39,3 +39,4 @@ class Settings:
     backend_cors_origins: List[AnyHttpUrl]
     execution_mode: str
     env_smoke_test: str
+    sqlite_wal_mode: bool = False

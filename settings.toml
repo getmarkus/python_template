@@ -4,6 +4,7 @@ database_url = "sqlite:///./issues.db"
 migrate_database = false
 execution_mode = "sqlmodel"
 env_smoke_test = ""
+sqlite_wal_mode = false
 
 # CORS Settings
 backend_cors_origins = []
