@@ -1,36 +1,11 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
-from sqlmodel.pool import StaticPool
+from sqlmodel import Session
 
-from main import app
 from app.core.usecases.analyze_issue import AnalyzeIssue
 from app.domain.issue import Issue, IssueState
 from app.interface_adapters.exceptions import NotFoundException
-from app.resource_adapters.persistence.sqlmodel.database import get_db
 from app.resource_adapters.persistence.sqlmodel.issues import SQLModelIssueRepository
-
-
-# https://sqlmodel.tiangolo.com/tutorial/fastapi/tests/
-@pytest.fixture(name="session")
-def session_fixture():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
-
-
-@pytest.fixture(name="client")
-def client_fixture(session: Session):
-    def get_session_override():
-         return session
-
-    app.dependency_overrides[get_db] = get_session_override
-    with TestClient(app, raise_server_exceptions=False) as client:
-        yield client
-        app.dependency_overrides.clear()
 
 
 def test_analyze_issue_command(client: TestClient, session: Session):
@@ -80,6 +55,7 @@ def test_analyze_issue_not_found(client: TestClient, session: Session):
 
     response = client.post("/issues/1/analyze")
     assert response.status_code == 404
+    assert response.json() == {"version": 1, "issue_number": 1}
 
 
 def test_analyze_issue_invalid_number(client: TestClient, session: Session):
