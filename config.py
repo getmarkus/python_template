@@ -17,7 +17,6 @@ class Settings(BaseSettings):
     env_smoke_test: str = ""
     project_name: str = ""
     database_url: str = "sqlite:///./issues.db"
-    #database_url: str = "sqlite://"
     migrate_database: bool = False
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
