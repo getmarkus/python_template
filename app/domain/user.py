@@ -19,7 +19,7 @@ class UserEvent(BaseEvent):
     timestamp: datetime
 
 
-class User(AggregateRoot[BaseCommand, BaseEvent]):
+class User(AggregateRoot):
     email: EmailStr
     is_active: bool = False
     full_name: str

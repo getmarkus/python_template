@@ -1,18 +1,13 @@
 import datetime
 import uuid
-from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from app.interface_adapters import api_router
-from app.interface_adapters.exceptions import AppException
-from app.interface_adapters.middleware.error_handler import app_exception_handler
-from app.resource_adapters.persistence.sqlmodel.database import get_engine
+from app.core.factory import create_app
 from config import settings
 
 # https://brandur.org/logfmt
@@ -26,23 +21,6 @@ def isRunning() -> bool:
     logger.info(f"Running state: {running}")
     logger.info(f"Environment: {settings.current_env}")
     return running
-
-
-# https://fastapi.tiangolo.com/advanced/events/
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-
-    # Initialize database if using SQLModel
-    get_engine()
-
-    app.state.running = True
-    logger.info("Lifespan started")
-    isRunning()
-
-    yield
-
-    app.state.running = False
-    logger.info("Lifespan stopped")
 
 
 def is_configured() -> bool:
@@ -104,14 +82,7 @@ def create_health_response(is_healthy: bool, check_name: str) -> JSONResponse:
     )
 
 
-app = FastAPI(
-    lifespan=lifespan,
-    title=settings.project_name,  # Use settings directly
-    openapi_url="/v1/openapi.json",
-)
-
-# Register global exception handler
-app.add_exception_handler(AppException, app_exception_handler)
+app = create_app()
 
 # middleware options
 # https://levelup.gitconnected.com/17-useful-middlewares-for-fastapi-that-you-should-know-about-951c2b0869c7
@@ -129,6 +100,8 @@ app.add_exception_handler(AppException, app_exception_handler)
 # Route security, ip address and user agent - TrustedHostMiddleware
 # gzip compression - GZipMiddleware
 # ssl enforcement - HTTPSRedirectMiddleware
+# request state
+# request IDs
 
 
 @app.middleware("http")
@@ -221,9 +194,6 @@ async def smoke_check() -> JSONResponse:
     """Configuration smoke test."""
     return create_health_response(is_configured(), "configuration")
 
-
-# add feature routers here
-app.include_router(api_router, prefix="/v1")
 
 # if unit test for health check is desired
 # https://fastapi.tiangolo.com/advanced/testing-events/

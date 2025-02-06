@@ -28,14 +28,13 @@ def get_engine(database_url: str | None = None) -> Engine:
 
     # Configure engine based on database type
     engine_args = {"echo": True}
-    
+
     # Add SQLite-specific settings for in-memory database
     if database_url == "sqlite://":
-        engine_args.update({
-            "connect_args": {"check_same_thread": False},
-            "poolclass": StaticPool
-        })
-    
+        engine_args.update(
+            {"connect_args": {"check_same_thread": False}, "poolclass": StaticPool}
+        )
+
     _engine = create_engine(database_url, **engine_args)
 
     # Enable WAL mode if configured
