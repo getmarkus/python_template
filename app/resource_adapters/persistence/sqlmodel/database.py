@@ -46,7 +46,7 @@ def get_engine(database_url: str | None = None) -> Engine:
             logger.info("SQLite WAL mode enabled")
 
     # Initialize database if using SQLModel
-    if settings.execution_mode == "sqlmodel" and not settings.migrate_database:
+    if settings.model_config == "sqlmodel" and not settings.migrate_database:
         logger.info("Creating database tables...")
         SQLModel.metadata.create_all(_engine)
         logger.info("Database tables created successfully")

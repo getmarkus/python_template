@@ -153,7 +153,7 @@ async def info() -> Dict[str, Any]:
     return {
         "app_name": settings.project_name,
         "system_time": datetime.datetime.now(),
-        "execution_mode": settings.execution_mode,
+        "model_config": settings.model_config,
         "env_smoke_test": settings.env_smoke_test,
         "env": settings.current_env,
     }

@@ -13,7 +13,11 @@ from pydantic import AnyHttpUrl
 
 settings = Dynaconf(
     envvar_prefix="APP",
-    settings_files=["settings.toml", ".secrets.toml"],
+    settings_files=[
+        "settings.toml",  # Base settings
+        ".secrets.toml",  # Secret settings
+        "settings.test.toml",  # Test-specific settings, loaded when APP_ENV=testing
+    ],
     environments=True,
     load_dotenv=True,
     validators=[
@@ -37,6 +41,6 @@ class Settings:
     database_url: str
     migrate_database: bool
     backend_cors_origins: List[AnyHttpUrl]
-    execution_mode: str
+    model_config: str
     env_smoke_test: str
     sqlite_wal_mode: bool = False

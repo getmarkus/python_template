@@ -8,6 +8,7 @@ from app.interface_adapters.exceptions import NotFoundException
 from app.resource_adapters.persistence.sqlmodel.issues import SQLModelIssueRepository
 
 
+@pytest.mark.env("testing")
 def test_analyze_issue_command(client: TestClient, session: Session):
     # Test case 1: Successful analysis
     issue_number = 1
@@ -25,6 +26,7 @@ def test_analyze_issue_command(client: TestClient, session: Session):
     assert response.issue_number == issue_number
 
 
+@pytest.mark.env("development")
 def test_analyze_issue_client(client: TestClient, session: Session):
     # Test case 1: Successful analysis
     issue_number = 1
