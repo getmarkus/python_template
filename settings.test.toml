@@ -1,0 +1,17 @@
+# Test-specific settings that override settings.toml when APP_ENV=testing
+[default]
+# sqlite:///./test.db sqlite://
+database_url = "sqlite://"
+# in-memory, sqlmodel
+model_config = "sqlmodel"
+env_smoke_test = "configured"
+backend_cors_origins = ["http://testserver"]
+migrate_database = false
+sqlite_wal_mode = false
+
+# You can still use environment-specific overrides in test settings
+[development]
+env_smoke_test = "development-test"
+
+[production]
+env_smoke_test = "production-test"

@@ -2,7 +2,8 @@
 project_name = "python-template"
 database_url = "sqlite:///./issues.db"
 migrate_database = false
-execution_mode = "sqlmodel"
+# in-memory, sqlmodel
+model_config = "sqlmodel"
 env_smoke_test = ""
 sqlite_wal_mode = false
 
@@ -31,3 +32,6 @@ cors_allow_methods = [
   "PUT",
   "DELETE",
 ] # Be more restrictive in production
+
+[testing]
+# Test-specific settings

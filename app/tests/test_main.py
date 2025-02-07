@@ -3,8 +3,6 @@ from fastapi.testclient import TestClient
 
 from main import app
 
-
-
 # https://sqlmodel.tiangolo.com/tutorial/fastapi/tests/
 # @pytest.fixture(name="session")
 # def session_fixture():
@@ -25,7 +23,7 @@ def client_fixture():
 
     with TestClient(app) as client:
         yield client
-        #app.dependency_overrides.clear()
+        # app.dependency_overrides.clear()
 
 
 def test_root(client: TestClient):
@@ -33,25 +31,31 @@ def test_root(client: TestClient):
     assert response.status_code == 200
     assert response.json()["app_name"] == "python-template"
 
+
 def test_health(client: TestClient):
     response = client.get("/health")
     assert response.status_code == 200
+
 
 def test_startup(client: TestClient):
     response = client.get("/startup")
     assert response.status_code == 200
 
+
 def test_readiness(client: TestClient):
     response = client.get("/readiness")
     assert response.status_code == 200
+
 
 def test_liveness(client: TestClient):
     response = client.get("/liveness")
     assert response.status_code == 200
 
+
 def test_smoke(client: TestClient):
     response = client.get("/smoke")
     assert response.status_code == 200
+
 
 def test_info(client: TestClient):
     response = client.get("/info")
@@ -60,7 +64,6 @@ def test_info(client: TestClient):
     assert "app_name" in data
     assert data["app_name"] == "python-template"
     assert "system_time" in data
-    assert "execution_mode" in data
+    assert "model_config" in data
     assert "env_smoke_test" in data
     assert data["env_smoke_test"] == "configured"
-

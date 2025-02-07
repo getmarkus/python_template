@@ -15,11 +15,15 @@ class Container(containers.DeclarativeContainer):
     db_session = providers.Factory(Session, bind=db_engine)
 
     # Repositories
-    issue_repository = providers.Factory(
-        (
-            SQLModelIssueRepository
-            if settings.execution_mode == "sqlmodel"
-            else InMemoryIssueRepository
-        ),
-        session=db_session if settings.execution_mode == "sqlmodel" else None,
+    sqlmodel_repository = providers.Factory(SQLModelIssueRepository, session=db_session)
+
+    in_memory_repository = providers.Factory(InMemoryIssueRepository)
+
+    def get_model_config():
+        return settings.model_config
+
+    issue_repository = providers.Selector(
+        get_model_config,
+        sqlmodel=sqlmodel_repository,
+        **{"in-memory": in_memory_repository},
     )
