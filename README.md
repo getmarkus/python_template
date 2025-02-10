@@ -1,15 +1,20 @@
-Simple python template I am experimenting with around a set of overlapping concepts with a Fastapi implementation:
-* DDD
-* Clean architecture
-* Ports/Adapters
-* Vertical slice
+# my personal python template playground
 
-``` bash
-dotenv run fastapi dev main.py
-dotenv run pytest
+Simple python template I am experimenting with around a set of overlapping concepts with a Fastapi implementation:
+
+- DDD
+- Clean architecture
+- Ports/Adapters
+- Vertical slice
+
+```bash
+uv run fastapi dev main.py
+uv run pytest
+
+atlas schema inspect -u "sqlite://issues.db" --format "{{ sql . }}" > migrate.sql
 ```
 
-``` mermaid
+```mermaid
 graph TD;
     analyze_endpoint["/issues/{issue_number}/analyze (POST)"] -->|Depends| configure_repository
     analyze_endpoint -->|Depends| configure_unit_of_work

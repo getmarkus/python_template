@@ -17,16 +17,16 @@ runtimes:
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
   disabled:
-    - git-diff-check
     - bandit
+    - git-diff-check
   enabled:
     - osv-scanner@1.9.2
     - yamllint@1.35.1
     - black@25.1.0
-    - checkov@3.2.368
+    - checkov@3.2.369
     - isort@6.0.0
     - markdownlint@0.44.0
-    - prettier@3.4.2
+    - prettier@3.5.0
     - ruff@0.9.5
     - taplo@0.9.3
     - trufflehog@3.88.5

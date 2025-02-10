@@ -38,7 +38,7 @@ def get_engine(database_url: str | None = None) -> Engine:
     _engine = create_engine(database_url, **engine_args)
 
     # Enable WAL mode if configured
-    if settings.sqlite_wal_mode and database_url.startswith("sqlite"):
+    if settings.sqlite_wal_mode:
         with _engine.connect() as conn:
             # https://www.sqlite.org/pragma.html
             conn.execute(text("PRAGMA journal_mode=WAL"))
@@ -48,6 +48,14 @@ def get_engine(database_url: str | None = None) -> Engine:
     # Initialize database if using SQLModel
     if settings.model_config == "sqlmodel" and not settings.migrate_database:
         logger.info("Creating database tables...")
+
+        if settings.database_schema:
+            SQLModel.metadata.schema = settings.database_schema
+            # if not conn.dialect.has_schema(conn, db_schema):
+            # logger.warning(f"Schema '{db_schema}' not found in database. Creating...")
+            # conn.execute(sa.schema.CreateSchema(db_schema))
+            # conn.commit()
+
         SQLModel.metadata.create_all(_engine)
         logger.info("Database tables created successfully")
 
