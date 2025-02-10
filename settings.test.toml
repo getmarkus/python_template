@@ -2,12 +2,13 @@
 [default]
 # sqlite:///./test.db sqlite://
 database_url = "sqlite://"
+database_schema = ""
 # in-memory, sqlmodel
 model_config = "sqlmodel"
-env_smoke_test = "configured"
-backend_cors_origins = ["http://testserver"]
 migrate_database = false
 sqlite_wal_mode = false
+env_smoke_test = "configured"
+backend_cors_origins = ["http://testserver"]
 
 # You can still use environment-specific overrides in test settings
 [development]

@@ -49,8 +49,7 @@ async def test_lifespan(app: FastAPI):
 app = create_app(lifespan_handler=test_lifespan)
 
 
-@pytest.fixture(name="session", autouse=True)
-@pytest.mark.env("testing")
+@pytest.fixture(name="session")
 def test_session():
     """Session fixture for testing environment using test database."""
     with Session(get_engine()) as session:
@@ -58,16 +57,6 @@ def test_session():
         statement = delete(Issue)
         session.exec(statement)
         session.commit()
-
-
-@pytest.fixture(name="session", autouse=True)
-@pytest.mark.env("development")
-def dev_session():
-    """Session fixture for development environment."""
-    with Session(get_engine()) as session:
-        yield session
-        # In development, we might want to keep the data
-        # or handle cleanup differently
 
 
 @pytest.fixture(name="client")

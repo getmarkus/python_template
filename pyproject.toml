@@ -6,6 +6,7 @@ authors = [{ name = "Chris Markus", email = "chris@christophermarkus.com" }]
 requires-python = "~=3.12"
 readme = "README.md"
 dependencies = [
+  "atlas-provider-sqlalchemy>=0.2.4",
   "dependency-injector>=4.45.0",
   "dynaconf>=3.2.7",
   "fastapi[standard]>=0.115.6",
