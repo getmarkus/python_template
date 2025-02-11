@@ -7,7 +7,6 @@ migrate_database = false
 sqlite_wal_mode = false
 # in-memory, sqlmodel
 model_config = "sqlmodel"
-env_smoke_test = ""
 
 # CORS Settings
 backend_cors_origins = []
@@ -36,4 +35,11 @@ cors_allow_methods = [
 ] # Be more restrictive in production
 
 [testing]
-# Test-specific settings
+# sqlite:///./test.db sqlite://
+database_url = "sqlite://"
+database_schema = ""
+# in-memory, sqlmodel
+model_config = "sqlmodel"
+migrate_database = false
+sqlite_wal_mode = false
+backend_cors_origins = ["http://testserver"]

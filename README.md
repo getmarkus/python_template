@@ -11,6 +11,8 @@ Simple python template I am experimenting with around a set of overlapping conce
 uv run fastapi dev main.py
 uv run pytest
 
+uvx dynaconf list
+
 atlas schema inspect -u "sqlite://issues.db" --format "{{ sql . }}" > migrate.sql
 ```
 

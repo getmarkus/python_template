@@ -52,6 +52,7 @@ class HealthCheck(BaseModel):
         ..., description="Required. Status of the service: pass, fail, or warn"
     )
     version: Optional[str] = Field(None, description="Version of the service")
+    env: Optional[str] = Field(None, description="Environment of the service")
     description: Optional[str] = Field(
         None, description="Human-friendly description of the service"
     )
@@ -66,6 +67,7 @@ def create_health_response(is_healthy: bool, check_name: str) -> JSONResponse:
     response = HealthCheck(
         status=status,
         version=settings.project_name,
+        env=settings.current_env,
         description=f"Service {status}",
         checks={
             check_name: {

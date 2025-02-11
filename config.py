@@ -16,7 +16,6 @@ settings = Dynaconf(
     settings_files=[
         "settings.toml",  # Base settings
         ".secrets.toml",  # Secret settings
-        "settings.test.toml",  # Test-specific settings, loaded when APP_ENV=testing
     ],
     environments=True,
     load_dotenv=True,

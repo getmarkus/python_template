@@ -1,7 +1,7 @@
 from typing import Generator
 
 from loguru import logger
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
@@ -51,12 +51,27 @@ def get_engine(database_url: str | None = None) -> Engine:
 
         if settings.database_schema:
             SQLModel.metadata.schema = settings.database_schema
+            # with self.engine.connect() as conn:
             # if not conn.dialect.has_schema(conn, db_schema):
             # logger.warning(f"Schema '{db_schema}' not found in database. Creating...")
             # conn.execute(sa.schema.CreateSchema(db_schema))
             # conn.commit()
 
-        SQLModel.metadata.create_all(_engine)
-        logger.info("Database tables created successfully")
+        # Check if tables exist before creating them
+        inspector = inspect(_engine)
+        existing_tables = inspector.get_table_names(
+            schema=settings.database_schema if settings.database_schema else None
+        )
+        if not existing_tables:
+            # if settings.database_schema:
+            #     # Create schema if it doesn't exist
+            #     if not inspector.has_schema(settings.database_schema):
+            #         logger.info(f"Creating schema '{settings.database_schema}'")
+            #         with _engine.begin() as conn:
+            #             conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS {settings.database_schema}'))
+            SQLModel.metadata.create_all(_engine)
+            logger.info("Database tables created successfully")
+        else:
+            logger.info("Database tables already exist, skipping creation")
 
     return _engine
