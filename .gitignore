@@ -204,3 +204,4 @@ Temporary Items
 *.sqlite3
 *.sqlite-journal
 *.sqlite3-journal
+*.db-journal
