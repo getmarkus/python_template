@@ -4,10 +4,12 @@ from loguru import logger
 
 from app.core.ports.repositories.issues import IssueRepository
 from app.domain.issue import Issue
-from app.resource_adapters.persistence.in_memory.unit_of_work import InMemoryUnitOfWork
+from app.resource_adapters.persistence.collections.unit_of_work import (
+    CollectionUnitOfWork,
+)
 
 
-class InMemoryIssueRepository(InMemoryUnitOfWork, IssueRepository):
+class CollectionIssueRepository(CollectionUnitOfWork, IssueRepository):
     def __init__(self) -> None:
         self.issues: List[Issue] = []
         # self.issues: dict[int, Issue] = {}
