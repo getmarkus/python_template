@@ -1,11 +1,12 @@
 [default]
 project_name = "python-template"
 # dialect+driver://username:password@host:port/database
+# sqlite:// sqlite:///./issues.db
 database_url = "sqlite:///./issues.db"
 database_schema = ""
 migrate_database = false
 sqlite_wal_mode = false
-# in-memory, sqlmodel
+# collection, sqlmodel
 model_config = "sqlmodel"
 
 # CORS Settings
@@ -38,7 +39,7 @@ cors_allow_methods = [
 # sqlite:///./test.db sqlite://
 database_url = "sqlite://"
 database_schema = ""
-# in-memory, sqlmodel
+# collection, sqlmodel
 model_config = "sqlmodel"
 migrate_database = false
 sqlite_wal_mode = false

@@ -5,7 +5,7 @@ from loguru import logger
 from app.core.repository import UnitOfWork
 
 
-class InMemoryUnitOfWork(UnitOfWork):
+class CollectionUnitOfWork(UnitOfWork):
     def __init__(self) -> None:
         self.committed = False
 
@@ -15,7 +15,7 @@ class InMemoryUnitOfWork(UnitOfWork):
     def rollback(self) -> None:
         self.committed = False
 
-    def __enter__(self) -> "InMemoryUnitOfWork":
+    def __enter__(self) -> "CollectionUnitOfWork":
         logger.info("enter uow")
         return self
 
