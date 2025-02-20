@@ -121,6 +121,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.testing
 .venv
 env/
 venv/
@@ -205,3 +206,4 @@ Temporary Items
 *.sqlite-journal
 *.sqlite3-journal
 *.db-journal
+*.sql

@@ -4,8 +4,6 @@ from typing import Protocol
 
 from sqlmodel import SQLModel
 
-from config import settings
-
 
 class BaseCommand(Protocol):
     command_id: str
@@ -21,10 +19,10 @@ class BaseEvent(Protocol):
 
 
 class AggregateRoot(SQLModel, abc.ABC):
-    # This sets the database schema in which to create tables for all subclasses of BaseModel
-    # __tablename__ = "sometable"
-    __table_args__ = {"schema": settings.database_schema}
     version: int = 0
+
+    def __init__(self, **data):
+        super().__init__(**data)
 
     # or handle()
     @abc.abstractmethod

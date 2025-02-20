@@ -1,28 +1,20 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.interface_adapters import api_router
-from app.interface_adapters.containers import Container
 from app.interface_adapters.exceptions import AppException
 from app.interface_adapters.middleware.error_handler import app_exception_handler
 from app.resource_adapters.persistence.sqlmodel.database import get_engine
-from config import settings
+from config import Settings
 
 
-def create_container():
-    container = Container()
-    container.wire(packages=["app"])
-    return container
-
-
-def create_app(lifespan_handler=None) -> FastAPI:
+def create_app(settings: Settings, lifespan_handler=None) -> FastAPI:
     if lifespan_handler is None:
 
         @asynccontextmanager
         async def default_lifespan(app: FastAPI):
-            # Initialize container and wire dependencies
-            container = create_container()
 
             # Initialize database if using SQLModel
             get_engine()
@@ -32,7 +24,6 @@ def create_app(lifespan_handler=None) -> FastAPI:
             yield
 
             app.state.running = False
-            container.unwire()
 
         lifespan_handler = default_lifespan
 
@@ -47,5 +38,19 @@ def create_app(lifespan_handler=None) -> FastAPI:
 
     # Register routes
     app.include_router(api_router, prefix="/v1")
+
+    # Configure CORS
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=(
+            [str(origin) for origin in settings.backend_cors_origins]
+            if settings.backend_cors_origins
+            else ["*"]
+        ),
+        allow_credentials=settings.cors_allow_credentials,
+        allow_methods=settings.cors_allow_methods,
+        allow_headers=settings.cors_allow_headers,
+        expose_headers=settings.cors_expose_headers,
+    )
 
     return app

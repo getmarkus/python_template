@@ -1,19 +1,7 @@
-import pytest
-from sqlmodel import Session, SQLModel, and_, create_engine
-from sqlmodel.pool import StaticPool
+from sqlmodel import Session, and_
 
 from app.domain.issue import Issue, IssueState
 from app.resource_adapters.persistence.sqlmodel.issues import SQLModelIssueRepository
-
-
-@pytest.fixture(name="session")
-def session_fixture():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
 
 
 def test_add_and_get_issue(session: Session):
@@ -25,7 +13,6 @@ def test_add_and_get_issue(session: Session):
 
     with uow:
         uow.add(test_issue)
-        uow.commit()
 
     with uow:
         retrieved_issue = uow.get_by_id(issue_number)
@@ -42,7 +29,6 @@ def test_list_issues(session: Session):
 
     with uow:
         uow.add(test_issue)
-        uow.commit()
 
     with uow:
         issues = uow.list()
@@ -58,13 +44,11 @@ def test_update_issue(session: Session):
     uow = SQLModelIssueRepository(session)
     with uow:
         uow.add(test_issue)
-        uow.commit()
 
     with uow:
         issue_to_update = uow.get_by_id(issue_number)
         issue_to_update.issue_state = IssueState.CLOSED
         uow.update(issue_to_update)
-        uow.commit()
 
     with uow:
         updated_issue = uow.get_by_id(issue_number)
@@ -79,7 +63,6 @@ def test_filter_issues(session: Session):
     uow = SQLModelIssueRepository(session)
     with uow:
         uow.add(test_issue)
-        uow.commit()
 
     with uow:
         closed_issues = uow.list_with_predicate(
@@ -98,7 +81,6 @@ def test_filter_issues_with_sql_predicate(session: Session):
     with uow:
         uow.add(closed_issue)
         uow.add(open_issue)
-        uow.commit()
 
     with uow:
         # Test filtering using SQL Column predicate
@@ -132,12 +114,10 @@ def test_remove_issue(session: Session):
     uow = SQLModelIssueRepository(session)
     with uow:
         uow.add(test_issue)
-        uow.commit()
 
     with uow:
         issue_to_remove = uow.get_by_id(issue_number)
         uow.remove(issue_to_remove)
-        uow.commit()
 
     with uow:
         remaining_issues = uow.list()

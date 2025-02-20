@@ -1,5 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
+from loguru import logger
 from sqlmodel import Session
 
 from app.core.usecases.analyze_issue import AnalyzeIssue
