@@ -1,28 +1,33 @@
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import pytest
 from _pytest.config import Config
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from loguru import logger
 from sqlmodel import Session, delete
 
 from app.core.factory import create_app
 from app.resource_adapters.persistence.sqlmodel.database import get_engine
 from app.resource_adapters.persistence.sqlmodel.issues import Issue
-from config import settings
+from config import Settings
+
+# Specify the custom .env file
+dotenv_path = Path(".env.testing")
+load_dotenv(dotenv_path=dotenv_path, override=True)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def set_test_settings():
-    """Fixture to force the use of the 'testing' environment for all tests."""
-    settings.configure(FORCE_ENV_FOR_DYNACONF="testing")
+settings = Settings()
 
 
 def pytest_unconfigure(config: Config) -> None:
     """Clean up after each test."""
     # Remove test database if it exists
     if os.path.exists("test.db"):
+        logger.info("Removing test database")
         os.remove("test.db")
 
 
@@ -37,13 +42,13 @@ async def test_lifespan(app: FastAPI):
 @pytest.fixture(name="app")
 def test_app():
     """Create test app instance only during test execution."""
-    return create_app(lifespan_handler=test_lifespan)
+    return create_app(settings, lifespan_handler=test_lifespan)
 
 
 @pytest.fixture(name="session")
 def test_session():
     """Session fixture for testing environment using test database."""
-    with Session(get_engine()) as session:
+    with Session(get_engine(settings)) as session:
         yield session
         statement = delete(Issue)
         session.exec(statement)
