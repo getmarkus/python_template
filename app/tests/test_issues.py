@@ -1,6 +1,5 @@
 import pytest
 from fastapi.testclient import TestClient
-from loguru import logger
 from sqlmodel import Session
 
 from app.core.usecases.analyze_issue import AnalyzeIssue
@@ -14,14 +13,17 @@ def test_analyze_issue_command(client: TestClient, session: Session):
     issue_number = 1
     test_issue = Issue(issue_number=issue_number, issue_state=IssueState.OPEN)
 
-    repository = SQLModelIssueRepository(session)
+    uow = SQLModelIssueRepository(session)
 
-    repository.add(test_issue)
-    repository.commit()
-    retrieved_issue = repository.get_by_id(issue_number)
-    assert retrieved_issue.issue_number == issue_number
+    with uow:
+        uow.add(test_issue)
 
-    use_case = AnalyzeIssue(issue_number=issue_number, repo=repository)
+    with uow:
+        retrieved_issue = uow.get_by_id(issue_number)
+        assert retrieved_issue.issue_number == issue_number
+        assert retrieved_issue.issue_state == IssueState.OPEN
+
+    use_case = AnalyzeIssue(issue_number=issue_number, repo=uow)
     response = use_case.analyze()
     assert response.issue_number == issue_number
 
@@ -31,10 +33,10 @@ def test_analyze_issue_client(client: TestClient, session: Session):
     issue_number = 1
     test_issue = Issue(issue_number=issue_number, issue_state=IssueState.OPEN)
 
-    repository = SQLModelIssueRepository(session)
+    uow = SQLModelIssueRepository(session)
 
-    repository.add(test_issue)
-    repository.commit()
+    with uow:
+        uow.add(test_issue)
 
     response = client.post("/v1/issues/1/analyze")
     assert response.status_code == 200
@@ -45,11 +47,14 @@ def test_analyze_issue_not_found(client: TestClient, session: Session):
     # Test case 1: Successful analysis
     issue_number = 1
 
-    repository = SQLModelIssueRepository(session)
-    retrieved_issue = repository.get_by_id(issue_number)
-    assert retrieved_issue.issue_number == 0
+    uow = SQLModelIssueRepository(session)
 
-    use_case = AnalyzeIssue(issue_number=issue_number, repo=repository)
+    with uow:
+        retrieved_issue = uow.get_by_id(issue_number)
+        assert retrieved_issue.issue_number == 0
+
+    use_case = AnalyzeIssue(issue_number=issue_number, repo=uow)
+
     with pytest.raises(NotFoundException) as exc_info:
         use_case.analyze()
     assert exc_info.value.message == "Issue not found"
@@ -58,7 +63,7 @@ def test_analyze_issue_not_found(client: TestClient, session: Session):
     assert response.status_code == 404
 
 
-def test_analyze_issue_invalid_number(client: TestClient, session: Session):
+def test_analyze_issue_invalid_number(client: TestClient):
     """Test analyzing an issue with an invalid issue number."""
 
     response = client.post("/v1/issues/abc/analyze")
@@ -70,8 +75,17 @@ def test_analyze_issue_invalid_number(client: TestClient, session: Session):
     assert error_detail[0]["loc"] == ["path", "issue_number"]
 
 
-def test_analyze_issue_unauthorized(client: TestClient):
+def test_analyze_issue_unauthorized(client: TestClient, session: Session):
     # Test case 3: Unauthorized access
+
+    issue_number = 456
+    test_issue = Issue(issue_number=issue_number, issue_state=IssueState.OPEN)
+
+    uow = SQLModelIssueRepository(session)
+
+    with uow:
+        uow.add(test_issue)
+
     response = client.post("/v1/issues/456/analyze")
     assert response.status_code == 401
     assert response.json() == {"detail": "Unauthorized"}
