@@ -13,14 +13,14 @@ from sqlmodel import Session, delete
 from app.core.factory import create_app
 from app.resource_adapters.persistence.sqlmodel.database import get_engine
 from app.resource_adapters.persistence.sqlmodel.issues import Issue
-from config import Settings
+from config import Settings, get_settings
 
 # Specify the custom .env file
 dotenv_path = Path(".env.testing")
 load_dotenv(dotenv_path=dotenv_path, override=True)
 
 
-settings = Settings()
+settings = get_settings()
 
 
 def pytest_unconfigure(config: Config) -> None:
