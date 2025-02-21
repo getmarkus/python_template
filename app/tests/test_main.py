@@ -3,6 +3,8 @@ from fastapi.testclient import TestClient
 
 from main import app
 
+from .conftest import settings
+
 
 @pytest.fixture(name="client")
 def client_fixture():
@@ -56,5 +58,5 @@ def test_is_configured():
     from main import is_configured
 
     assert (
-        is_configured() is True
+        is_configured(settings) is True
     )  # Should be True since project_name is set to "python-template"
