@@ -8,10 +8,12 @@ def test_initial_state():
     assert IssueState.OPEN.value == "OPEN"
     assert IssueState.CLOSED.value == "CLOSED"
 
+
 def test_is_open_property():
     """Test the is_open property returns correct values"""
     assert IssueState.OPEN.is_open is True
     assert IssueState.CLOSED.is_open is False
+
 
 def test_valid_transitions():
     """Test all valid state transitions"""
@@ -29,6 +31,7 @@ def test_valid_transitions():
     new_state = state.transition(IssueTransitionType.REOPEN)
     assert new_state == IssueState.OPEN
 
+
 def test_invalid_transitions():
     """Test that invalid transitions raise appropriate errors"""
     # Test cannot close an already closed issue
@@ -43,6 +46,7 @@ def test_invalid_transitions():
         IssueState.OPEN.transition(IssueTransitionType.REOPEN)
     assert "Cannot perform REOPEN transition from state OPEN" in str(exc_info.value)
 
+
 def test_unknown_transition_type():
     """Test that using an undefined transition type raises an error"""
 
@@ -54,6 +58,7 @@ def test_unknown_transition_type():
     with pytest.raises(ValueError) as exc_info:
         IssueState.OPEN.transition(FakeTransitionType())
     assert "Unknown transition type: FAKE_TRANSITION" in str(exc_info.value)
+
 
 def test_transitions_immutability():
     """Test that the transitions dictionary cannot be modified at runtime"""

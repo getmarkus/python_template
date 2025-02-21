@@ -23,13 +23,13 @@ lint:
     - osv-scanner@1.9.2
     - yamllint@1.35.1
     - black@25.1.0
-    - checkov@3.2.369
+    - checkov@3.2.372
     - isort@6.0.0
     - markdownlint@0.44.0
-    - prettier@3.5.0
-    - ruff@0.9.5
+    - prettier@3.5.1
+    - ruff@0.9.7
     - taplo@0.9.3
-    - trufflehog@3.88.5
+    - trufflehog@3.88.12
 actions:
   enabled:
     - trunk-upgrade-available
