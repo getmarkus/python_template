@@ -1,7 +1,6 @@
-from functools import lru_cache
 from typing import List, Literal
 
-from pydantic import AnyHttpUrl, field_validator
+from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +13,13 @@ class Settings(BaseSettings):
     sqlite_wal_mode: bool = False
     database_type: str = "sqlmodel"
     current_env: Literal["testing", "default"]
+
+    @property
+    def get_table_schema(self) -> str | None:
+        """Return table_schema if database_url does not start with sqlite, otherwise return None."""
+        if self.database_url.startswith("sqlite"):
+            return None
+        return self.database_schema
 
     # CORS settings
     backend_cors_origins: List[str] = ["http://localhost:8000", "http://localhost:3000"]
@@ -36,12 +42,12 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    @field_validator("database_schema")
+    """ @field_validator("database_schema")
     def validate_schema(cls, v: str | None, values) -> str | None:
         # Only set database_schema if database_url doesn't start with sqlite
         if values.data.get("database_url", "").startswith("sqlite"):
             return None
-        return v
+        return v """
 
     @property
     def backend_cors_origins_list(self) -> List[AnyHttpUrl]:
@@ -49,6 +55,6 @@ class Settings(BaseSettings):
 
 
 # Singleton pattern to ensure only one settings instance
-@lru_cache()
+# @lru_cache()
 def get_settings() -> "Settings":
     return Settings()

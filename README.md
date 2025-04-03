@@ -11,12 +11,13 @@ Simple python template I am experimenting with around a set of overlapping conce
 uv run fastapi dev main.py
 uv run pytest
 
+atlas schema inspect -u "sqlite://file?cache=shared&mode=memory" --format "{{ sql . }}"
 atlas schema inspect -u "sqlite://issues.db" --format "{{ sql . }}" > migrate.sql
 
 atlas schema apply --url "sqlite://issues.db" --to "file://migrate.sql" --dev-url "sqlite://file?mode=memory" --dry-run
 atlas schema apply --url "sqlite://issues.db" --to "file://migrate.sql" --dev-url "sqlite://file?mode=memory"
 
-atlas schema apply --url "postgres://postgres:pass@localhost:5432/database?search_path=public&sslmode=disable" --to "file://schema.sql" --dev-url "docker://postgres/17"
+atlas schema apply --url "postgres://app_user:change_this_password@localhost:5432/app_database?sslmode=disable" --to "file://migrate.sql" --dev-url "docker://postgres/17" --schema "issue_analysis" --dry-run
 ```
 
 ```mermaid

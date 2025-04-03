@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from app.core.factory import create_app
 from config import Settings, get_settings
 
+
 # https://brandur.org/logfmt
 # https://github.com/Delgan/loguru
 # https://betterstack.com/community/guides/logging/loguru/

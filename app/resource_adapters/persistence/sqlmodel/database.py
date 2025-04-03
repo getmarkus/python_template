@@ -2,14 +2,39 @@ from typing import Annotated, Generator
 
 from fastapi import Depends
 from loguru import logger
-from sqlalchemy import inspect, schema, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel, create_engine, MetaData
+from sqlalchemy import text, schema
 
 from config import Settings, get_settings
 
 _engine: Engine | None = None
+_metadata: MetaData | None = None
+
+
+def get_metadata(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> MetaData:
+    """Dependency that provides SQLModel metadata with the correct schema configuration."""
+    global _metadata
+
+    if _metadata is None:
+        _metadata = MetaData(schema=settings.get_table_schema)
+
+        # Optional: Add naming convention for constraints
+        # _metadata.naming_convention = {
+        #     "ix": "ix_%(column_0_label)s",
+        #     "uq": "uq_%(table_name)s_%(column_0_name)s",
+        #     "ck": "ck_%(table_name)s_%(constraint_name)s",
+        #     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+        #     "pk": "pk_%(table_name)s"
+        # }
+
+    return _metadata
+
+
+MetadataDep = Annotated[MetaData, Depends(get_metadata)]
 
 
 def get_session(
@@ -17,7 +42,9 @@ def get_session(
 ) -> Generator[Session, Settings, None]:
     with Session(_engine) as session:
         session.connection(
-            execution_options={"schema_translate_map": {None: settings.database_schema}}
+            execution_options={
+                "schema_translate_map": {None: settings.get_table_schema}
+            }
         )
         yield session
 
@@ -35,18 +62,16 @@ def get_engine(_settings: Settings | None = None) -> Engine:
     if _settings is None:
         _settings = get_settings()
 
-    database_url = _settings.database_url
-
     # Configure engine based on database type
     engine_args = {"echo": True}
 
     # Add SQLite-specific settings for in-memory database
-    if database_url == "sqlite://":
+    if _settings.database_url.startswith("sqlite"):
         engine_args.update(
             {"connect_args": {"check_same_thread": False}, "poolclass": StaticPool}
         )
 
-    _engine = create_engine(database_url, **engine_args)
+    _engine = create_engine(_settings.database_url, **engine_args)
 
     # Enable WAL mode if configured
     if _settings.sqlite_wal_mode:
@@ -56,42 +81,29 @@ def get_engine(_settings: Settings | None = None) -> Engine:
             # conn.execute(text("PRAGMA synchronous=OFF"))
             logger.info("SQLite WAL mode enabled")
 
-    # Initialize database if using SQLModel
-    if (
-        _settings.database_type == "sqlmodel"
-        and _settings.database_schema
-        and not _settings.database_url.startswith("sqlite")
-    ):
-        SQLModel.metadata.schema = _settings.database_schema
+    # Initialize schema if using SQLModel, with a schema if not sqlite
+    if _settings.database_type == "sqlmodel":
+        SQLModel.metadata.schema = _settings.get_table_schema
         with _engine.connect() as conn:
             conn.execution_options = {
-                "schema_translate_map": {None: _settings.database_schema}
+                "schema_translate_map": {None: _settings.get_table_schema}
             }
-            if not conn.dialect.has_schema(conn, _settings.database_schema):
+            if not _settings.database_url.startswith(
+                "sqlite"
+            ) and not conn.dialect.has_schema(conn, _settings.get_table_schema):
                 logger.warning(
-                    f"Schema '{_settings.database_schema}' not found in database. Creating..."
+                    f"Schema '{_settings.get_table_schema}' not found in database. Creating..."
                 )
-                conn.execute(schema.CreateSchema(_settings.database_schema))
+                conn.execute(schema.CreateSchema(_settings.get_table_schema))
                 conn.commit()
 
-    if _settings.database_type == "sqlmodel" and not _settings.migrate_database:
-        logger.info("Creating database tables...")
-
-        # Check if tables exist before creating them
-        inspector = inspect(_engine)
-        existing_tables = inspector.get_table_names(
-            schema=_settings.database_schema if _settings.database_schema else None
-        )
-        if not existing_tables:
-            # if settings.database_schema:
-            #     # Create schema if it doesn't exist
-            #     if not inspector.has_schema(settings.database_schema):
-            #         logger.info(f"Creating schema '{settings.database_schema}'")
-            #         with _engine.begin() as conn:
-            #             conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS {settings.database_schema}'))
-            SQLModel.metadata.create_all(_engine)
-            logger.info("Database tables created successfully")
-        else:
-            logger.info("Database tables already exist, skipping creation")
+            if not _settings.migrate_database:
+                SQLModel.metadata.create_all(conn)
+                conn.commit()
+                logger.info("Database tables created successfully")
+            else:
+                logger.info(
+                    "Database tables already exist or migration is configured, skipping creation"
+                )
 
     return _engine

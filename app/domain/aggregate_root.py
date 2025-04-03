@@ -18,7 +18,14 @@ class BaseEvent(Protocol):
     timestamp: datetime
 
 
-class AggregateRoot(SQLModel, abc.ABC):
+class AggregateRoot(SQLModel, abc.ABC, table=False):
+    """
+    Base class for all aggregate roots in the domain.
+
+    The metadata for this class is injected at runtime using FastAPI's dependency injection.
+    Before using this class for database operations, ensure that set_metadata has been called.
+    """
+
     version: int = 0
 
     def __init__(self, **data):
