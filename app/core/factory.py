@@ -6,8 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.interface_adapters import api_router
 from app.interface_adapters.exceptions import AppException
 from app.interface_adapters.middleware.error_handler import app_exception_handler
-from app.resource_adapters.persistence.sqlmodel.database import get_engine
 from config import Settings
+from app.resource_adapters.persistence.sqlmodel.database import get_engine
 
 
 def create_app(settings: Settings, lifespan_handler=None) -> FastAPI:
@@ -15,10 +15,7 @@ def create_app(settings: Settings, lifespan_handler=None) -> FastAPI:
 
         @asynccontextmanager
         async def default_lifespan(app: FastAPI):
-
-            # Initialize database if using SQLModel
-            get_engine()
-
+            get_engine(settings)
             app.state.running = True
 
             yield

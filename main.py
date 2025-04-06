@@ -7,8 +7,12 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from app.core.factory import create_app
 from config import Settings, get_settings
+
+# don't change ordering here, settings must be called prior to initialization of app.core.factory
+_settings = get_settings()
+
+from app.core.factory import create_app  # noqa: E402
 
 # https://brandur.org/logfmt
 # https://github.com/Delgan/loguru
@@ -83,7 +87,7 @@ def create_health_response(is_healthy: bool, check_name: str) -> JSONResponse:
     )
 
 
-app = create_app(get_settings())
+app = create_app(_settings)
 
 # middleware options
 # https://levelup.gitconnected.com/17-useful-middlewares-for-fastapi-that-you-should-know-about-951c2b0869c7

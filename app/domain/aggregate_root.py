@@ -1,6 +1,7 @@
 import abc
 from datetime import datetime
 from typing import Protocol
+from config import get_settings
 
 from sqlmodel import SQLModel
 
@@ -10,7 +11,8 @@ class BaseCommand(Protocol):
     timestamp: datetime
 
     # might need specification pattern here
-    def validate(self) -> bool: ...
+    def validate(self) -> bool:
+        ...
 
 
 class BaseEvent(Protocol):
@@ -18,7 +20,15 @@ class BaseEvent(Protocol):
     timestamp: datetime
 
 
-class AggregateRoot(SQLModel, abc.ABC):
+class AggregateRoot(SQLModel, abc.ABC, table=False):
+    """
+    Base class for all aggregate roots in the domain.
+
+    The metadata for this class is injected at runtime using FastAPI's dependency injection.
+    Before using this class for database operations, ensure that set_metadata has been called.
+    """
+
+    __table_args__ = {"schema": get_settings().get_table_schema}
     version: int = 0
 
     def __init__(self, **data):
