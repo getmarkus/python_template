@@ -2,6 +2,7 @@ from typing import List, Literal
 
 from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from functools import lru_cache
 
 
 class Settings(BaseSettings):
@@ -55,6 +56,6 @@ class Settings(BaseSettings):
 
 
 # Singleton pattern to ensure only one settings instance
-# @lru_cache()
+@lru_cache()
 def get_settings() -> "Settings":
     return Settings()

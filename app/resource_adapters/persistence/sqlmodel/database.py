@@ -41,11 +41,11 @@ def get_session(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> Generator[Session, Settings, None]:
     with Session(_engine) as session:
-        session.connection(
+        """ session.connection(
             execution_options={
                 "schema_translate_map": {None: settings.get_table_schema}
             }
-        )
+        ) """
         yield session
 
 
@@ -85,9 +85,9 @@ def get_engine(_settings: Settings | None = None) -> Engine:
     if _settings.database_type == "sqlmodel":
         SQLModel.metadata.schema = _settings.get_table_schema
         with _engine.connect() as conn:
-            conn.execution_options = {
+            """ conn.execution_options = {
                 "schema_translate_map": {None: _settings.get_table_schema}
-            }
+            } """
             if not _settings.database_url.startswith(
                 "sqlite"
             ) and not conn.dialect.has_schema(conn, _settings.get_table_schema):

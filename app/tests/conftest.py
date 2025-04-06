@@ -10,14 +10,16 @@ from fastapi.testclient import TestClient
 from loguru import logger
 from sqlmodel import Session, delete
 
-from app.core.factory import create_app
-from app.resource_adapters.persistence.sqlmodel.database import get_engine
-from app.resource_adapters.persistence.sqlmodel.issues import Issue
-from config import get_settings
 
 # Specify the custom .env file
+# don't change ordering here, settings must be called prior to initialization of app.core.factory
 dotenv_path = Path(".env.testing")
 load_dotenv(dotenv_path=dotenv_path, override=True)
+
+from app.core.factory import create_app  # noqa: E402
+from app.resource_adapters.persistence.sqlmodel.database import get_engine  # noqa: E402
+from app.resource_adapters.persistence.sqlmodel.issues import Issue  # noqa: E402
+from config import get_settings  # noqa: E402
 
 
 settings = get_settings()
@@ -51,7 +53,7 @@ async def test_lifespan(app: FastAPI):
 @pytest.fixture(name="app")
 def test_app():
     """Create test app instance only during test execution."""
-    return create_app(settings, lifespan_handler=test_lifespan)
+    return create_app(settings)
 
 
 @pytest.fixture(name="session")
