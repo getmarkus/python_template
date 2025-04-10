@@ -4,32 +4,31 @@ from pathlib import Path
 
 import pytest
 from _pytest.config import Config
+
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from loguru import logger
 from sqlmodel import Session, delete
-
+from config import get_settings  # noqa: E402
 
 # Specify the custom .env file
 # don't change ordering here, settings must be called prior to initialization of app.core.factory
 dotenv_path = Path(".env.testing")
 load_dotenv(dotenv_path=dotenv_path, override=True)
 
+settings = get_settings()
+
 from app.core.factory import create_app  # noqa: E402
 from app.resource_adapters.persistence.sqlmodel.database import get_engine  # noqa: E402
 from app.resource_adapters.persistence.sqlmodel.issues import Issue  # noqa: E402
-from config import get_settings  # noqa: E402
-
-
-settings = get_settings()
 
 
 def pytest_unconfigure(config: Config) -> None:
     """Clean up after each test."""
     # Extract database path from the database URL
     db_url = settings.database_url
-    if db_url.startswith("sqlite:///") and not db_url.endswith(":memory:"):
+    if "memory" not in db_url:
         # Remove the sqlite:/// prefix to get the file path
         db_path = db_url.replace("sqlite:///", "")
         # Remove ./ prefix if present
