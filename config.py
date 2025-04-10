@@ -1,7 +1,12 @@
 from typing import List, Literal
 
 from pydantic import AnyHttpUrl
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    SettingsConfigDict,
+    PydanticBaseSettingsSource,
+)
+from typing import Type
 from functools import lru_cache
 
 
@@ -14,13 +19,6 @@ class Settings(BaseSettings):
     sqlite_wal_mode: bool = False
     database_type: str = "sqlmodel"
     current_env: Literal["testing", "default"]
-
-    @property
-    def get_table_schema(self) -> str | None:
-        """Return table_schema if database_url does not start with sqlite, otherwise return None."""
-        if self.database_url.startswith("sqlite"):
-            return None
-        return self.database_schema
 
     # CORS settings
     backend_cors_origins: List[str] = ["http://localhost:8000", "http://localhost:3000"]
@@ -43,19 +41,33 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    """ @field_validator("database_schema")
-    def validate_schema(cls, v: str | None, values) -> str | None:
-        # Only set database_schema if database_url doesn't start with sqlite
-        if values.data.get("database_url", "").startswith("sqlite"):
+    @property
+    def get_table_schema(self) -> str | None:
+        """Return table_schema if database_url does not start with sqlite, otherwise return None."""
+        if self.database_url.startswith("sqlite"):
             return None
-        return v """
+        return self.database_schema
 
     @property
     def backend_cors_origins_list(self) -> List[AnyHttpUrl]:
         return [AnyHttpUrl(origin) for origin in self.backend_cors_origins]
 
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: Type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            env_settings,
+            dotenv_settings,
+            file_secret_settings,
+        )
 
-# Singleton pattern to ensure only one settings instance
+
 @lru_cache()
 def get_settings() -> "Settings":
     return Settings()
