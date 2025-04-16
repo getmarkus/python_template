@@ -13,11 +13,12 @@ uv run pytest
 
 atlas schema inspect -u "sqlite://file?cache=shared&mode=memory" --format "{{ sql . }}"
 atlas schema inspect -u "sqlite://issues.db" --format "{{ sql . }}" > migrate.sql
+atlas schema inspect -u "postgres://app_user:change_this_password@localhost:5432/app_database?sslmode=disable" --schema "issue_analysis" --format "{{ sql . }}"
 
 atlas schema apply --url "sqlite://issues.db" --to "file://migrate.sql" --dev-url "sqlite://file?mode=memory" --dry-run
 atlas schema apply --url "sqlite://issues.db" --to "file://migrate.sql" --dev-url "sqlite://file?mode=memory"
 
-atlas schema apply --url "postgres://app_user:change_this_password@localhost:5432/app_database?sslmode=disable" --to "file://migrate.sql" --dev-url "docker://postgres/17" --schema "issue_analysis" --dry-run
+atlas schema apply --url "postgres://app_user:change_this_password@localhost:5432/app_database?sslmode=disable" --to "file://migrate.sql" --dev-url "docker://postgres/17" --dry-run
 ```
 
 ```mermaid
