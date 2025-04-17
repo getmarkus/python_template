@@ -27,9 +27,28 @@ services:
     networks:
       - app_network
 
+  atlas:
+    image: arigaio/atlas:latest
+    container_name: atlas_migrations
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - ./migrations:/migrations
+    command: >
+      migrate apply
+      --url "postgres://${POSTGRES_SUPER_USER}:${POSTGRES_SUPER_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable"
+      --dir "file:///migrations"
+    networks:
+      - app_network
+
 volumes:
   postgres_data:
     name: postgres_data
+  postgres_data_dev:
+    name: postgres_data_dev
 
 networks:
   app_network:
