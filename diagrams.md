@@ -1,3 +1,5 @@
+# Diagrams
+
 ```mermaid
 graph TD;
     analyze_endpoint["/issues/{issue_number}/analyze (POST)"] -->|Depends| configure_repository
@@ -10,8 +12,10 @@ graph TD;
     AnalyzeIssue_analyze --> repo_get_by_id["repo.get_by_id()"]
     repo_get_by_id -->|Issue found| AnalyzeIssue_analyze
     repo_get_by_id -->|Issue not found| repo_add["repo.add()"]
+
     repo_add --> AnalyzeIssue_analyze
 ```
+
 ```mermaid
 graph TD;
     analyze_endpoint["/issues/{issue_number}/analyze (POST)"] -->|Depends| configure_repository["configure_repository()"]
