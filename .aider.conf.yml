@@ -1,0 +1,6 @@
+# Aider configuration file
+read:
+  - .windsurf/rules/agent-rules.md
+  - .pair-programming-rules.md
+
+git: false

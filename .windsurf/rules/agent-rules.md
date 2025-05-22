@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Design and Principles
 
 - Simple python template I am experimenting with around a set of overlapping concepts with a Fastapi implementation:
