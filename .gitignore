@@ -207,3 +207,6 @@ Temporary Items
 *.sqlite3-journal
 *.db-journal
 analyze.sql
+
+# Trunk
+.trunk
