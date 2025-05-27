@@ -210,3 +210,8 @@ analyze.sql
 
 # Trunk
 .trunk
+
+# Aider
+.aider.input.history
+.aider.chat.history.md
+.aider*
