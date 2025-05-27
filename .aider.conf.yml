@@ -3,4 +3,4 @@ read:
   - .windsurf/rules/agent-rules.md
   - .pair-programming-rules.md
 
-git: false
+git: true
