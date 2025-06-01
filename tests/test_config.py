@@ -1,4 +1,4 @@
-from .conftest import settings
+from conftest import settings
 
 
 def test_testing_database_url():

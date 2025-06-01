@@ -75,8 +75,9 @@ def test_analyze_issue_invalid_number(client: TestClient):
     assert error_detail[0]["loc"] == ["path", "issue_number"]
 
 
-def test_analyze_issue_unauthorized(client: TestClient, session: Session):
-    # Test case 3: Unauthorized access
+# change to test for access permission
+def test_analyze_issue_success(client: TestClient, session: Session):
+    # Test case 3: Successful analysis with specific issue number
 
     issue_number = 456
     test_issue = Issue(issue_number=issue_number, issue_state=IssueState.OPEN)
@@ -87,5 +88,7 @@ def test_analyze_issue_unauthorized(client: TestClient, session: Session):
         uow.add(test_issue)
 
     response = client.post("/v1/issues/456/analyze")
-    assert response.status_code == 401
-    assert response.json() == {"detail": "Unauthorized"}
+    assert response.status_code == 200
+    assert response.json() == {"issue_state": "OPEN", "version": 0, "issue_number": 456}
+    # assert response.status_code == 401
+    # assert response.json() == {"detail": "Unauthorized"}

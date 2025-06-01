@@ -1,16 +1,23 @@
 import os
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 import pytest
 from _pytest.config import Config
-
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from loguru import logger
 from sqlmodel import Session, delete
-from config import get_settings  # noqa: E402
+
+# Add the project root to the Python path to ensure imports work correctly
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) 
+
+# Make this file importable as a module
+sys.path.insert(0, os.path.dirname(__file__))
+
+from config import get_settings
 
 # Specify the custom .env file
 # don't change ordering here, settings must be called prior to initialization of app.core.factory
@@ -19,9 +26,10 @@ load_dotenv(dotenv_path=dotenv_path, override=True)
 
 settings = get_settings()
 
-from app.core.factory import create_app  # noqa: E402
-from app.resource_adapters.persistence.sqlmodel.database import get_engine  # noqa: E402
-from app.resource_adapters.persistence.sqlmodel.issues import Issue  # noqa: E402
+# Import these after settings are loaded
+from app.core.factory import create_app
+from app.resource_adapters.persistence.sqlmodel.database import get_engine
+from app.resource_adapters.persistence.sqlmodel.issues import Issue
 
 
 def pytest_unconfigure(config: Config) -> None:

@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 
 from main import app
 
-from .conftest import settings
+from conftest import settings
 
 
 @pytest.fixture(name="client")
