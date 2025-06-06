@@ -1,13 +1,17 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.interface_adapters import api_router
-from app.interface_adapters.exceptions import AppException
-from app.interface_adapters.middleware.error_handler import app_exception_handler
+from app.features.issues import router as issues_router
+from app.core.exceptions import AppException
+from app.core.middleware import app_exception_handler
 from config import Settings
-from app.resource_adapters.persistence.sqlmodel.database import get_engine
+from app.core.database import get_engine
+
+# Create API router and include feature routers
+api_router = APIRouter()
+api_router.include_router(issues_router, tags=["issues"])
 
 
 def create_app(settings: Settings, lifespan_handler=None) -> FastAPI:

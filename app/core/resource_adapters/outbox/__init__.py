@@ -1,0 +1,1 @@
+# Outbox resource adapters initialization

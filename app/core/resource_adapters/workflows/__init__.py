@@ -1,0 +1,1 @@
+# Workflows resource adapters initialization

@@ -1,7 +1,7 @@
 from sqlmodel import Session, and_
 
 from app.domain.issue import Issue, IssueState
-from app.resource_adapters.persistence.sqlmodel.issues import SQLModelIssueRepository
+from app.features.issues.repository import SQLModelIssueRepository
 
 
 def test_add_and_get_issue(session: Session):

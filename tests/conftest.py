@@ -28,8 +28,8 @@ settings = get_settings()
 
 # Import these after settings are loaded
 from app.core.factory import create_app
-from app.resource_adapters.persistence.sqlmodel.database import get_engine
-from app.resource_adapters.persistence.sqlmodel.issues import Issue
+from app.core.database import get_engine
+from app.domain.issue import Issue
 
 
 def pytest_unconfigure(config: Config) -> None:

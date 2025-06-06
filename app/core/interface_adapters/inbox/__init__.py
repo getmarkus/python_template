@@ -1,0 +1,1 @@
+# Inbox interface adapters initialization

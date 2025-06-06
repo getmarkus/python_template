@@ -2,10 +2,10 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app.core.usecases.analyze_issue import AnalyzeIssue
+from app.features.issues.analyze_issue import AnalyzeIssue
 from app.domain.issue import Issue, IssueState
-from app.interface_adapters.exceptions import NotFoundException
-from app.resource_adapters.persistence.sqlmodel.issues import SQLModelIssueRepository
+from app.core.exceptions import NotFoundException
+from app.features.issues.repository import SQLModelIssueRepository
 
 
 def test_analyze_issue_command(client: TestClient, session: Session):
