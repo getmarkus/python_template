@@ -1,0 +1,1 @@
+# Services resource adapters initialization

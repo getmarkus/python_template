@@ -4,11 +4,13 @@ trigger: always_on
 
 # Design and Principles
 
-- Simple python template I am experimenting with around a set of overlapping concepts with a Fastapi implementation:
-  - Domain Driven Design (DDD)
-  - Clean architecture
-  - Ports & Adapters
-  - Vertical slice
+- Simple python template I am experimenting with around a set of overlapping concepts with a Fastapi implementation, primarily:
+  - Vertical Slice
+  - With elements of:
+    - Domain Driven Design (DDD)
+    - Clean Architecture
+    - Ports & Adapters
+    - CQRS
 
 ## Core System Components
 
