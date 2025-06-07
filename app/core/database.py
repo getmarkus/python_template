@@ -67,35 +67,37 @@ def get_engine(_settings: Settings | None = None) -> Engine:
     if _settings is None:
         _settings = get_settings()
 
-    # Configure engine based on database type
-    engine_args = {"echo": True}
+    url = _settings.database_url
+    try:
+        from sqlalchemy.engine import make_url
 
-    # Add SQLite-specific settings for in-memory database
-    if _settings.database_url.startswith("sqlite"):
+        url_obj = make_url(url)
+        if "+" in url_obj.drivername:
+            base_driver = url_obj.drivername.split("+", 1)[0]
+            url_obj = url_obj.set(drivername=base_driver)
+        url = str(url_obj)
+    except ImportError:
+        pass
+
+    engine_args: dict = {"echo": True}
+    if url.startswith("sqlite"):
         engine_args.update(
             {"connect_args": {"check_same_thread": False}, "poolclass": StaticPool}
         )
 
-    _engine = create_engine(_settings.database_url, **engine_args)
+    _engine = create_engine(url, **engine_args)
 
-    # Enable WAL mode if configured
-    if _settings.sqlite_wal_mode:
+    if _settings.sqlite_wal_mode and url.startswith("sqlite"):
         with _engine.connect() as conn:
-            # https://www.sqlite.org/pragma.html
             conn.execute(text("PRAGMA journal_mode=WAL"))
-            # conn.execute(text("PRAGMA synchronous=OFF"))
             logger.info("SQLite WAL mode enabled")
 
-    # Initialize schema if using SQLModel, with a schema if not sqlite
     if _settings.database_type == "sqlmodel":
         SQLModel.metadata.schema = _settings.get_table_schema
         with _engine.connect() as conn:
-            """ conn.execution_options = {
-                "schema_translate_map": {None: _settings.get_table_schema}
-            } """
-            if not _settings.database_url.startswith(
-                "sqlite"
-            ) and not conn.dialect.has_schema(conn, _settings.get_table_schema):
+            if not url.startswith("sqlite") and not conn.dialect.has_schema(
+                conn, _settings.get_table_schema  # type: ignore[arg-type]
+            ):
                 logger.warning(
                     f"Schema '{_settings.get_table_schema}' not found in database. Creating..."
                 )
