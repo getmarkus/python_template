@@ -7,7 +7,7 @@ from app.features.issues import router as issues_router
 from app.core.exceptions import AppException
 from app.core.middleware import app_exception_handler
 from config import Settings
-from app.core.database import get_engine
+from app.core.database import get_engine, get_async_engine
 
 # Create API router and include feature routers
 api_router = APIRouter()
@@ -20,6 +20,7 @@ def create_app(settings: Settings, lifespan_handler=None) -> FastAPI:
         @asynccontextmanager
         async def default_lifespan(app: FastAPI):
             get_engine(settings)
+            get_async_engine(settings)
             app.state.running = True
 
             yield

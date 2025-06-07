@@ -1,8 +1,10 @@
-from typing import Annotated, Generator
+from typing import Annotated, Generator, AsyncGenerator
 
 from fastapi import Depends
 from loguru import logger
 from sqlalchemy.engine import Engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine, MetaData
 from sqlalchemy import text, schema
@@ -10,7 +12,9 @@ from sqlalchemy import text, schema
 from config import Settings, get_settings
 
 _engine: Engine | None = None
+_async_engine: AsyncEngine | None = None
 _metadata: MetaData | None = None
+_async_sessionmaker: sessionmaker[AsyncSession] | None = None
 
 
 def get_metadata(
@@ -107,3 +111,38 @@ def get_engine(_settings: Settings | None = None) -> Engine:
                 )
 
     return _engine
+
+
+def get_async_engine(_settings: Settings | None = None) -> AsyncEngine:
+    """Get or create async SQLModel engine instance."""
+    global _async_engine, _async_sessionmaker
+
+    if _async_engine is not None:
+        return _async_engine
+
+    if _settings is None:
+        _settings = get_settings()
+
+    url = _settings.database_url
+    if url.startswith("sqlite") and "+aiosqlite" not in url:
+        url = url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+
+    engine_args: dict = {"echo": True}
+    if url.startswith("sqlite"):
+        engine_args.update({"connect_args": {"check_same_thread": False}, "poolclass": StaticPool})
+
+    _async_engine = create_async_engine(url, **engine_args)
+    _async_sessionmaker = sessionmaker(_async_engine, class_=AsyncSession, expire_on_commit=False)
+    return _async_engine
+
+
+async def get_async_session(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> AsyncGenerator[AsyncSession, None]:
+    engine = get_async_engine(settings)
+    assert _async_sessionmaker is not None
+    async with _async_sessionmaker() as session:
+        yield session
+
+
+AsyncSessionDep = Annotated[AsyncSession, Depends(get_async_session)]
