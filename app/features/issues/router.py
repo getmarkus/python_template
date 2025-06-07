@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
+from fastapi.concurrency import run_in_threadpool
 from loguru import logger
 
 from app.features.issues.repository import IssueRepository
@@ -18,10 +19,10 @@ def get_repository(session: SessionDep) -> IssueRepository:
 
 
 @router.post("/issues/{issue_number}/analyze", response_model=Issue)
-def analyze_issue(
+async def analyze_issue(
     issue_number: int,
     repo: Annotated[IssueRepository, Depends(get_repository)],
 ) -> Issue:
     logger.info(f"analyzing issue: {issue_number}")
     use_case = AnalyzeIssue(issue_number=issue_number, repo=repo)
-    return use_case.analyze()
+    return await run_in_threadpool(use_case.analyze)
