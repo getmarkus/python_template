@@ -71,10 +71,17 @@ def get_engine(_settings: Settings | None = None) -> Engine:
     try:
         from sqlalchemy.engine import make_url
 
+        # For migrations, strip any async driver suffix and use the sync DBAPI:
+        # - PostgreSQL: always use psycopg (psycopg3) as the sync driver
+        # - SQLite: use the built-in sqlite driver
         url_obj = make_url(url)
-        if "+" in url_obj.drivername:
-            base_driver = url_obj.drivername.split("+", 1)[0]
-            url_obj = url_obj.set(drivername=base_driver)
+        scheme, *_ = url_obj.drivername.split("+", 1)
+        if scheme in ("postgresql", "postgres"):
+            # normalize to PostgreSQL with psycopg3 for sync migrations
+            sync_driver = "postgresql+psycopg"
+        else:
+            sync_driver = scheme
+        url_obj = url_obj.set(drivername=sync_driver)
         url = str(url_obj)
     except ImportError:
         pass
