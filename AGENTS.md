@@ -29,6 +29,8 @@
 - Variables: Use `snake_case`
 - Constants: Use `UPPER_CASE`
 - Classes: Use `CamelCase`
+- Use `uv` for dependency management
+- Use `pyenv` for python version management
 - Use `loguru` for logging
 - Use `pydantic` for data validation
 - Use `sqlmodel` for database interactions
@@ -36,7 +38,6 @@
 - Use `python-dotenv` for environment variables
 - Use `pytest` for testing
 - Use `pytest-cov` for coverage
-- Use `uv` for dependency management
 
 ## Data & Storage
 
