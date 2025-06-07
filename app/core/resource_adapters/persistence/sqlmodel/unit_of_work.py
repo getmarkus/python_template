@@ -2,7 +2,7 @@ from types import TracebackType
 
 from loguru import logger
 from sqlmodel import Session
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.unit_of_work import UnitOfWork
 

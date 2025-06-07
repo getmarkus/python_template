@@ -3,7 +3,7 @@ from typing import Callable, Iterable, List, Protocol, Union
 from loguru import logger
 from sqlalchemy.sql.elements import BinaryExpression, BooleanClauseList, ClauseElement
 from sqlmodel import Session, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.domain.issue import Issue
 from app.core.resource_adapters.persistence.sqlmodel.unit_of_work import SQLModelUnitOfWork, AsyncSQLModelUnitOfWork
@@ -100,24 +100,24 @@ class AsyncSQLModelIssueRepository(AsyncSQLModelUnitOfWork, IssueRepository):
     async def get_by_id(self, id: int) -> Issue:
         logger.info(f"getting issue by id: {id}")
         statement = select(Issue).where(Issue.issue_number == id)
-        result = await self.session.execute(statement)
-        issue = result.scalars().first()
+        result = await self.session.exec(statement)
+        issue = result.first()
         if not issue:
             return Issue(issue_number=0, version=0)
         return issue
 
     async def list(self) -> List[Issue]:
         statement = select(Issue)
-        result = await self.session.execute(statement)
-        return result.scalars().all()
+        result = await self.session.exec(statement)
+        return result.all()
 
     async def list_with_predicate(
         self, predicate: Union[Callable[[Issue], bool], ClauseElement]
     ) -> List[Issue]:
         if isinstance(predicate, (BinaryExpression, BooleanClauseList)):
             statement = select(Issue).where(predicate)
-            result = await self.session.execute(statement)
-            return result.scalars().all()
+            result = await self.session.exec(statement)
+            return result.all()
         all_issues = await self.list()
         return [issue for issue in all_issues if predicate(issue)]
 
@@ -129,8 +129,8 @@ class AsyncSQLModelIssueRepository(AsyncSQLModelUnitOfWork, IssueRepository):
         logger.info(f"updating issue: {entity}")
         issue_number = entity.issue_number
         statement = select(Issue).where(Issue.issue_number == issue_number)
-        result = await self.session.execute(statement)
-        existing = result.scalars().first()
+        result = await self.session.exec(statement)
+        existing = result.first()
         if existing:
             existing.issue_state = entity.issue_state
             existing.version = entity.version
@@ -140,7 +140,7 @@ class AsyncSQLModelIssueRepository(AsyncSQLModelUnitOfWork, IssueRepository):
         logger.info(f"removing issue: {entity}")
         issue_number = entity.issue_number
         statement = select(Issue).where(Issue.issue_number == issue_number)
-        result = await self.session.execute(statement)
-        existing = result.scalars().first()
+        result = await self.session.exec(statement)
+        existing = result.first()
         if existing:
             self.session.delete(existing)
