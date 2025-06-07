@@ -104,7 +104,7 @@ class Settings(BaseSettings):
         Useful for libraries that accept connection parameters as separate arguments.
         """
         # Use the dynamic URL with current password
-        url = self.database_url_with_current_password
+        url = self.database_url
 
         if url.startswith("sqlite"):
             # Handle SQLite connections

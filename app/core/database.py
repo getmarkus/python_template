@@ -67,24 +67,46 @@ def get_engine(_settings: Settings | None = None) -> Engine:
     if _settings is None:
         _settings = get_settings()
 
-    url = _settings.database_url
+    # Get the base URL template and credentials
+    url_template = _settings.database_url_template
+    username = _settings.app_db_user
+    password = _settings.app_db_password.get_secret_value() if _settings.app_db_password else None
+    
+    # Determine if we're using PostgreSQL or SQLite
+    is_postgres = url_template.startswith("postgresql") or url_template.startswith("postgres")
+    
+    if is_postgres:
+        # For PostgreSQL, create the URL with explicit credentials
+        from urllib.parse import quote_plus
+        
+        # Extract the host, port, and database name from the template
+        if "@" in url_template:
+            protocol_part, rest = url_template.split("://", 1)
+            _, server_part = rest.split("@", 1)
+        else:
+            protocol_part, server_part = url_template.split("://", 1)
+        
+        # We'll use psycopg for sync connections regardless of the original driver
+        
+        # Use psycopg for sync connections
+        sync_driver = "postgresql+psycopg"
+        
+        # Create the URL with explicit credentials
+        url = f"{sync_driver}://{username}:{quote_plus(password)}@{server_part}"
+        logger.debug(f"Database connection prepared with driver: {sync_driver}")
+    else:
+        # For SQLite or other databases, use the template as is
+        url = url_template
+        logger.debug("Using database URL template as is: {}".format(url_template))
+    
+    # Log the connection attempt
+    logger.debug("Database connection URL created (password masked in logs)")
     try:
         from sqlalchemy.engine import make_url
-
-        # For migrations, strip any async driver suffix and use the sync DBAPI:
-        # - PostgreSQL: always use psycopg (psycopg3) as the sync driver
-        # - SQLite: use the built-in sqlite driver
-        url_obj = make_url(url)
-        scheme, *_ = url_obj.drivername.split("+", 1)
-        if scheme in ("postgresql", "postgres"):
-            # normalize to PostgreSQL with psycopg3 for sync migrations
-            sync_driver = "postgresql+psycopg"
-        else:
-            sync_driver = scheme
-        url_obj = url_obj.set(drivername=sync_driver)
-        url = str(url_obj)
+        # Just for validation purposes
+        make_url(url)
     except ImportError:
-        pass
+        logger.warning("Could not import sqlalchemy.engine.make_url")
 
     engine_args: dict = {"echo": True}
     if url.startswith("sqlite"):
@@ -103,7 +125,8 @@ def get_engine(_settings: Settings | None = None) -> Engine:
         SQLModel.metadata.schema = _settings.get_table_schema
         with _engine.connect() as conn:
             if not url.startswith("sqlite") and not conn.dialect.has_schema(
-                conn, _settings.get_table_schema  # type: ignore[arg-type]
+                conn,
+                _settings.get_table_schema,  # type: ignore[arg-type]
             ):
                 logger.warning(
                     f"Schema '{_settings.get_table_schema}' not found in database. Creating..."
@@ -149,10 +172,14 @@ def get_async_engine(_settings: Settings | None = None) -> AsyncEngine:
 
     engine_args: dict = {"echo": True}
     if url.startswith("sqlite"):
-        engine_args.update({"connect_args": {"check_same_thread": False}, "poolclass": StaticPool})
+        engine_args.update(
+            {"connect_args": {"check_same_thread": False}, "poolclass": StaticPool}
+        )
 
     _async_engine = create_async_engine(url, **engine_args)
-    _async_sessionmaker = sessionmaker(_async_engine, class_=AsyncSession, expire_on_commit=False)
+    _async_sessionmaker = sessionmaker(
+        _async_engine, class_=AsyncSession, expire_on_commit=False
+    )
     return _async_engine
 
 
