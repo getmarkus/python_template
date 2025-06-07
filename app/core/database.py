@@ -125,8 +125,18 @@ def get_async_engine(_settings: Settings | None = None) -> AsyncEngine:
         _settings = get_settings()
 
     url = _settings.database_url
+    # SQLite: use the aiosqlite driver for async support
     if url.startswith("sqlite") and "+aiosqlite" not in url:
         url = url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+    else:
+        # PostgreSQL: ensure an asyncpg driver if scheme is postgres/postgresql without a +driver suffix
+        try:
+            scheme, rest = url.split("://", 1)
+        except ValueError:
+            scheme = url
+            rest = ""
+        if scheme in ("postgres", "postgresql") and "+" not in scheme:
+            url = f"postgresql+asyncpg://{rest}"
 
     engine_args: dict = {"echo": True}
     if url.startswith("sqlite"):
