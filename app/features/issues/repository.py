@@ -3,9 +3,10 @@ from typing import Callable, Iterable, List, Protocol, Union
 from loguru import logger
 from sqlalchemy.sql.elements import BinaryExpression, BooleanClauseList, ClauseElement
 from sqlmodel import Session, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.domain.issue import Issue
-from app.core.resource_adapters.persistence.sqlmodel.unit_of_work import SQLModelUnitOfWork
+from app.core.resource_adapters.persistence.sqlmodel.unit_of_work import SQLModelUnitOfWork, AsyncSQLModelUnitOfWork
 
 
 class IssueRepository(Protocol):
@@ -88,5 +89,58 @@ class SQLModelIssueRepository(SQLModelUnitOfWork, IssueRepository):
         issue_number = entity.issue_number
         statement = select(Issue).where(Issue.issue_number == issue_number)
         existing = self.session.exec(statement).first()
+        if existing:
+            self.session.delete(existing)
+
+
+class AsyncSQLModelIssueRepository(AsyncSQLModelUnitOfWork, IssueRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        super().__init__(session)
+
+    async def get_by_id(self, id: int) -> Issue:
+        logger.info(f"getting issue by id: {id}")
+        statement = select(Issue).where(Issue.issue_number == id)
+        result = await self.session.exec(statement)
+        issue = result.first()
+        if not issue:
+            return Issue(issue_number=0, version=0)
+        return issue
+
+    async def list(self) -> List[Issue]:
+        statement = select(Issue)
+        result = await self.session.exec(statement)
+        return result.all()
+
+    async def list_with_predicate(
+        self, predicate: Union[Callable[[Issue], bool], ClauseElement]
+    ) -> List[Issue]:
+        if isinstance(predicate, (BinaryExpression, BooleanClauseList)):
+            statement = select(Issue).where(predicate)
+            result = await self.session.exec(statement)
+            return result.all()
+        all_issues = await self.list()
+        return [issue for issue in all_issues if predicate(issue)]
+
+    async def add(self, entity: Issue) -> None:
+        logger.info(f"adding issue: {entity.issue_number}")
+        self.session.add(entity)
+
+    async def update(self, entity: Issue) -> None:
+        logger.info(f"updating issue: {entity}")
+        issue_number = entity.issue_number
+        statement = select(Issue).where(Issue.issue_number == issue_number)
+        result = await self.session.exec(statement)
+        existing = result.first()
+        if existing:
+            existing.issue_state = entity.issue_state
+            existing.version = entity.version
+            self.session.add(existing)
+
+    async def remove(self, entity: Issue) -> None:
+        logger.info(f"removing issue: {entity}")
+        issue_number = entity.issue_number
+        statement = select(Issue).where(Issue.issue_number == issue_number)
+        result = await self.session.exec(statement)
+        existing = result.first()
         if existing:
             self.session.delete(existing)

@@ -1,8 +1,11 @@
-from typing import Annotated, Generator
+from typing import Annotated, Generator, AsyncGenerator
 
 from fastapi import Depends
 from loguru import logger
 from sqlalchemy.engine import Engine
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine, MetaData
 from sqlalchemy import text, schema
@@ -10,7 +13,9 @@ from sqlalchemy import text, schema
 from config import Settings, get_settings
 
 _engine: Engine | None = None
+_async_engine: AsyncEngine | None = None
 _metadata: MetaData | None = None
+_async_sessionmaker: sessionmaker[AsyncSession] | None = None
 
 
 def get_metadata(
@@ -62,48 +67,134 @@ def get_engine(_settings: Settings | None = None) -> Engine:
     if _settings is None:
         _settings = get_settings()
 
-    # Configure engine based on database type
-    engine_args = {"echo": True}
+    # Get the base URL template and credentials
+    url = _settings.database_url_template
 
-    # Add SQLite-specific settings for in-memory database
-    if _settings.database_url.startswith("sqlite"):
+    try:
+        from sqlalchemy.engine import make_url
+
+        # Just for validation purposes
+        make_url(url)
+    except ImportError:
+        logger.warning("Could not import sqlalchemy.engine.make_url")
+
+    engine_args: dict = {"echo": True}
+    if url.startswith("sqlite"):
         engine_args.update(
             {"connect_args": {"check_same_thread": False}, "poolclass": StaticPool}
         )
 
-    _engine = create_engine(_settings.database_url, **engine_args)
+    _engine = create_engine(url, **engine_args)
 
-    # Enable WAL mode if configured
-    if _settings.sqlite_wal_mode:
+    if _settings.sqlite_wal_mode and url.startswith("sqlite"):
         with _engine.connect() as conn:
-            # https://www.sqlite.org/pragma.html
             conn.execute(text("PRAGMA journal_mode=WAL"))
-            # conn.execute(text("PRAGMA synchronous=OFF"))
             logger.info("SQLite WAL mode enabled")
 
-    # Initialize schema if using SQLModel, with a schema if not sqlite
-    if _settings.database_type == "sqlmodel":
-        SQLModel.metadata.schema = _settings.get_table_schema
-        with _engine.connect() as conn:
-            """ conn.execution_options = {
-                "schema_translate_map": {None: _settings.get_table_schema}
-            } """
-            if not _settings.database_url.startswith(
-                "sqlite"
-            ) and not conn.dialect.has_schema(conn, _settings.get_table_schema):
-                logger.warning(
-                    f"Schema '{_settings.get_table_schema}' not found in database. Creating..."
-                )
-                conn.execute(schema.CreateSchema(_settings.get_table_schema))
-                conn.commit()
+    # Set schema for SQLModel metadata
+    SQLModel.metadata.schema = _settings.get_table_schema
+    with _engine.connect() as conn:
+        if not url.startswith("sqlite") and not conn.dialect.has_schema(
+            conn,
+            _settings.get_table_schema,  # type: ignore[arg-type]
+        ):
+            logger.warning(
+                f"Schema '{_settings.get_table_schema}' not found in database. Creating..."
+            )
+            conn.execute(schema.CreateSchema(_settings.get_table_schema))
+            conn.commit()
 
-            if not _settings.migrate_database:
-                SQLModel.metadata.create_all(conn)
-                conn.commit()
-                logger.info("Database tables created successfully")
-            else:
-                logger.info(
-                    "Database tables already exist or migration is configured, skipping creation"
-                )
+        if _settings.create_tables:
+            SQLModel.metadata.create_all(conn)
+            conn.commit()
+            logger.info("Database tables created successfully")
+        else:
+            logger.info(
+                "Database tables already exist or migration is configured, skipping creation"
+            )
 
     return _engine
+
+
+def get_async_engine(_settings: Settings | None = None) -> AsyncEngine:
+    """Get or create async SQLModel engine instance."""
+    global _async_engine, _async_sessionmaker
+
+    if _async_engine is not None:
+        return _async_engine
+
+    if _settings is None:
+        _settings = get_settings()
+
+    url = _settings.database_url
+    engine_args: dict = {"echo": True}
+    
+    # SQLite: use the aiosqlite driver for async support
+    if url.startswith("sqlite") and "+aiosqlite" not in url:
+        url = url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+        engine_args.update(
+            {"connect_args": {"check_same_thread": False}, "poolclass": StaticPool}
+        )
+    else:
+        # PostgreSQL: ensure an asyncpg driver if scheme is postgres/postgresql without a +driver suffix
+        try:
+            scheme, rest = url.split("://", 1)
+        except ValueError:
+            scheme = url
+            rest = ""
+            
+        # Handle SSL mode for asyncpg
+        connect_args = {}
+        if "?" in rest:
+            base_url, query_string = rest.split("?", 1)
+            params = {}
+            for param in query_string.split("&"):
+                if "=" in param:
+                    key, value = param.split("=", 1)
+                    params[key] = value
+            
+            # Remove sslmode from URL and add as connect_args for asyncpg
+            if "sslmode" in params:
+                sslmode = params.pop("sslmode")
+                if sslmode == "disable":
+                    connect_args["ssl"] = False
+                elif sslmode in ("require", "verify-ca", "verify-full"):
+                    connect_args["ssl"] = True
+                
+                # Rebuild the URL without sslmode
+                new_query = "&".join([f"{k}={v}" for k, v in params.items()])
+                if new_query:
+                    rest = f"{base_url}?{new_query}"
+                else:
+                    rest = base_url
+        
+        if connect_args:
+            engine_args["connect_args"] = connect_args
+            
+        if scheme in ("postgres", "postgresql") and "+" not in scheme:
+            url = f"postgresql+asyncpg://{rest}"
+
+    engine_args: dict = {"echo": True}
+    if url.startswith("sqlite"):
+        engine_args.update(
+            {"connect_args": {"check_same_thread": False}, "poolclass": StaticPool}
+        )
+
+    _async_engine = create_async_engine(url, **engine_args)
+    _async_sessionmaker = sessionmaker(
+        _async_engine, class_=AsyncSession, expire_on_commit=False
+    )
+    return _async_engine
+
+
+async def get_async_session(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> AsyncGenerator[AsyncSession, None]:
+    # Initialize the async engine if it doesn't exist yet
+    get_async_engine(settings)
+    assert _async_sessionmaker is not None
+    async with _async_sessionmaker() as session:
+        yield session
+
+
+AsyncSessionDep = Annotated[AsyncSession, Depends(get_async_session)]

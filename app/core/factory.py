@@ -7,7 +7,7 @@ from app.features.issues import router as issues_router
 from app.core.exceptions import AppException
 from app.core.middleware import app_exception_handler
 from config import Settings
-from app.core.database import get_engine
+from app.core.database import get_async_engine, get_engine
 
 # Create API router and include feature routers
 api_router = APIRouter()
@@ -19,7 +19,18 @@ def create_app(settings: Settings, lifespan_handler=None) -> FastAPI:
 
         @asynccontextmanager
         async def default_lifespan(app: FastAPI):
-            get_engine(settings)
+            # Choose database engine based on configuration
+            if settings.is_async_database:
+                # Use async engine for async database URLs
+                get_async_engine(settings)
+            else:
+                # For sync database URLs, we need to initialize the engine outside the async context
+                # This is done here for simplicity, but in production you might want to
+                # use a background task or separate initialization step
+                import asyncio
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(None, lambda: get_engine(settings))
+                
             app.state.running = True
 
             yield
