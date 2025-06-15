@@ -11,6 +11,9 @@ Simple python template I am experimenting with around a set of overlapping conce
 uv run fastapi dev main.py
 uv run pytest
 
+docker compose up
+docker compose down -v
+
 atlas schema inspect -u "sqlite://file?cache=shared&mode=memory" --format "{{ sql . }}"
 atlas schema inspect -u "sqlite://issues.db" --format "{{ sql . }}" > migrate.sql
 atlas schema inspect -u "postgres://app_user:change_this_password@localhost:5432/app_database?sslmode=disable" --schema "issue_analysis" --format "{{ sql . }}"
@@ -20,8 +23,4 @@ atlas schema apply --url "sqlite://issues.db" --to "file://migrate.sql" --dev-ur
 
 atlas schema apply --url "postgres://app_user:change_this_password@localhost:5432/app_database?sslmode=disable" --to "file://./migrations/migrate.sql" --dev-url "docker://postgres/17" --dry-run
 atlas schema apply --url "postgres://app_user:change_this_password@localhost:5432/app_database?sslmode=disable" --to "file://./migrations/migrate.sql" --dev-url "docker://postgres/17"
-```
-
-```mermaid
-graph TD;
 ```
