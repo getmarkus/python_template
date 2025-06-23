@@ -63,15 +63,15 @@ wheels = [
 
 [[package]]
 name = "atlas-provider-sqlalchemy"
-version = "0.3.1"
+version = "0.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "sqlalchemy" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1f/7f/de52f413178f2ef18d4cb4e4f7d7da7f88f1ffb39766316a42db0a6b3752/atlas_provider_sqlalchemy-0.3.1.tar.gz", hash = "sha256:84e2ac05d4966bb5a93dc1dcc14749e65fd89f4862a5e18c2ae857f20719884a", size = 9029, upload-time = "2025-06-12T12:13:16.709Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/92/47/b184628352a920f259d58fbf1950fc99dc612630c033e19b29799a844e7a/atlas_provider_sqlalchemy-0.3.2.tar.gz", hash = "sha256:58cc72f7221e7911b6c385ec71cf348a4c3e30aa411e7aeda010ba5f8a8f2f42", size = 9196, upload-time = "2025-06-18T12:17:39.582Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e9/c5/2274fcb57b1c85198c77594663adc1c7a803fed547a680c1d4b36a67863e/atlas_provider_sqlalchemy-0.3.1-py3-none-any.whl", hash = "sha256:d19a224067ec45d4dbb9ddc89ccd5dfb2770a2e381e4e346ceba0988ba6aff61", size = 11025, upload-time = "2025-06-12T12:13:15.548Z" },
+    { url = "https://files.pythonhosted.org/packages/c7/06/7fbb0f6ee5a06005a2ff95629045f0bcd06dcdb87a6961e2966d1befe36b/atlas_provider_sqlalchemy-0.3.2-py3-none-any.whl", hash = "sha256:0545e66238168ac674ded7697036f471a5f78d5520c121175856f0b01127d938", size = 11199, upload-time = "2025-06-18T12:17:38.515Z" },
 ]
 
 [[package]]
